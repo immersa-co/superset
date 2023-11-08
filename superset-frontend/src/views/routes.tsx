@@ -22,6 +22,10 @@ import React, { lazy } from 'react';
 // not lazy loaded since this is the home page.
 import Home from 'src/pages/Home';
 
+const ImmersaTest = lazy(
+  () => import(/* webpackChunkName: "ChartCreation" */ 'src/pages/Immersa'),
+);
+
 const ChartCreation = lazy(
   () =>
     import(/* webpackChunkName: "ChartCreation" */ 'src/pages/ChartCreation'),
@@ -135,6 +139,14 @@ type Routes = {
 }[];
 
 export const routes: Routes = [
+  {
+    path: '/immersa',
+    Component: ImmersaTest,
+  },
+  {
+    path: '/superset/welcome/',
+    Component: Home,
+  },
   {
     path: '/superset/welcome/',
     Component: Home,
