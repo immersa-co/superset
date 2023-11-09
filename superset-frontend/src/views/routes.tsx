@@ -140,7 +140,7 @@ type Routes = {
 
 export const routes: Routes = [
   {
-    path: '/immersa',
+    path: '/immersa/list/',
     Component: ImmersaTest,
   },
   {

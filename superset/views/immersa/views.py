@@ -17,8 +17,9 @@
 
 
 from flask import Response
+from flask_appbuilder import permission_name
 from flask_appbuilder.api import expose
-from flask_babel import gettext as __, lazy_gettext as _
+from flask_appbuilder.security.decorators import has_access
 
 from superset import event_logger
 from superset.constants import MODEL_VIEW_RW_METHOD_PERMISSION_MAP
@@ -38,5 +39,7 @@ class ImmersaView(BaseSupersetView):  # pylint: disable=too-many-ancestors
 
     # For lists only
     @expose("/list/")
+    # @has_access
+    # @permission_name("show")
     def list(self) -> FlaskResponse:
         return super().render_app_template()

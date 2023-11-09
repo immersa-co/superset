@@ -356,6 +356,7 @@ const config = {
       },
       {
         test: /\.css$/,
+        exclude: [`${APP_DIR}/src/immersa`, `${APP_DIR}/src/pages/Immersa`],
         include: [APP_DIR, /superset-ui.+\/src/],
         use: [
           isDevMode ? 'style-loader' : MiniCssExtractPlugin.loader,
@@ -366,6 +367,12 @@ const config = {
             },
           },
         ],
+      },
+      {
+        test: /\.css$/i,
+        include: [`${APP_DIR}/src/immersa`, `${APP_DIR}/src/pages/Immersa`],
+        issuer: /\.([jt])sx?$/,
+        use: ['style-loader', 'css-loader', 'postcss-loader'],
       },
       {
         test: /\.less$/,
