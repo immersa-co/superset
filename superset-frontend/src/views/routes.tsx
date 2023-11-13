@@ -148,10 +148,6 @@ export const routes: Routes = [
     Component: Home,
   },
   {
-    path: '/superset/welcome/',
-    Component: Home,
-  },
-  {
     path: '/dashboard/list/',
     Component: DashboardList,
   },

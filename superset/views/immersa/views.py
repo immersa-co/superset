@@ -15,16 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 
-from flask import Response
+import requests
+from flask import request, Response, session
 from flask_appbuilder import permission_name
 from flask_appbuilder.api import expose
 from flask_appbuilder.security.decorators import has_access
+from flask_babel import _
 
 from superset import event_logger
 from superset.constants import MODEL_VIEW_RW_METHOD_PERMISSION_MAP
 from superset.superset_typing import FlaskResponse
-from superset.views.base import BaseSupersetView
+from superset.views.base import (
+    api,
+    BaseSupersetView,
+    handle_api_exception,
+    json_error_response,
+)
 
 
 class ImmersaView(BaseSupersetView):  # pylint: disable=too-many-ancestors
@@ -39,7 +47,34 @@ class ImmersaView(BaseSupersetView):  # pylint: disable=too-many-ancestors
 
     # For lists only
     @expose("/list/")
+    @event_logger.log_this
     # @has_access
     # @permission_name("show")
     def list(self) -> FlaskResponse:
         return super().render_app_template()
+
+    @expose("/segments/<path:u_path>")
+    @api
+    @handle_api_exception
+    def segments_proxy(u_path) -> FlaskResponse:
+        token_getter = session.get("oauth")
+        if token_getter is None:
+            return json_error_response(_("Request missing token."), status=401)
+
+        token = token_getter[0]
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
+        print(u_path)
+
+        url = f'https://{os.getenv("LIVEOPS_SERVICE_URL")}/{u_path}'
+        response = requests.request(
+            method=request.method, url=url, headers=headers, data=request.get_data()
+        )
+
+        return Response(
+            response.content, status=response.status_code, mimetype="application/json"
+        )
