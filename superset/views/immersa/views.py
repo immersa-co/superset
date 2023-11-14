@@ -53,10 +53,10 @@ class ImmersaView(BaseSupersetView):  # pylint: disable=too-many-ancestors
     def list(self) -> FlaskResponse:
         return super().render_app_template()
 
-    @expose("/segments/<path:u_path>")
+    @expose("/segments/<path:custom_path>")
     @api
     @handle_api_exception
-    def segments_proxy(u_path) -> FlaskResponse:
+    def segments_proxy(self, custom_path: str) -> FlaskResponse:
         token_getter = session.get("oauth")
         if token_getter is None:
             return json_error_response(_("Request missing token."), status=401)
@@ -68,9 +68,8 @@ class ImmersaView(BaseSupersetView):  # pylint: disable=too-many-ancestors
             "Content-Type": "application/json",
         }
 
-        print(u_path)
+        url = f'{os.getenv("LIVEOPS_SERVICE_URL")}/segments/{custom_path}'
 
-        url = f'https://{os.getenv("LIVEOPS_SERVICE_URL")}/{u_path}'
         response = requests.request(
             method=request.method, url=url, headers=headers, data=request.get_data()
         )

@@ -10,7 +10,7 @@ class LiveOpsApi {
   baseUrl: string;
 
   constructor() {
-    this.baseUrl = `${window.location.origin}/immersa`;
+    this.baseUrl = `${window.location.origin}/immersa/`;
   }
 
   async getSegments({ signal }: { signal?: AbortSignal }) {

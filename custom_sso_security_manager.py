@@ -7,11 +7,12 @@ logger = logging.getLogger("auth0_login")
 
 
 class CustomSsoSecurityManager(SupersetSecurityManager):
-    def oauth_user_info(self, provider):
+    def oauth_user_info(self, provider, response=None):  # type: ignore
         if provider == "auth0":
             res = self.appbuilder.sm.oauth_remotes[provider].get(
                 f'{os.getenv("AUTH0_DOMAIN")}/userinfo'
             )
+
             if res.status_code != 200:
                 logger.error("Failed to obtain user info: %s", res.data)
                 return
@@ -29,6 +30,6 @@ class CustomSsoSecurityManager(SupersetSecurityManager):
                 "email": me["email"],
                 "first_name": me["given_name"],
                 "last_name": me["family_name"],
+                "role_keys": me["role_keys"],
                 # "organization": me["organization"],
-                # "role_keys": me["role_keys"],
             }
