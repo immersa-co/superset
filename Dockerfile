@@ -78,6 +78,10 @@ RUN --mount=target=/var/lib/apt/lists,type=cache \
     && chown -R superset:superset ./*
 
 COPY --chown=superset:superset setup.py MANIFEST.in README.md ./
+
+# Custom Security Manager
+COPY --chown=superset:superset custom_sso_security_manager.py /app/pythonpath
+
 # setup.py uses the version information in package.json
 COPY --chown=superset:superset superset-frontend/package.json superset-frontend/
 RUN --mount=type=bind,target=./requirements/local.txt,src=./requirements/local.txt \
