@@ -78,6 +78,7 @@ import { PivotTableChartPlugin as PivotTableChartPluginV2 } from '@superset-ui/p
 import { HandlebarsChartPlugin } from '@superset-ui/plugin-chart-handlebars';
 import { PopKPIPlugin } from '@superset-ui/plugin-chart-period-over-period-kpi';
 import TimeTableChartPlugin from '../TimeTable';
+import { SupersetPluginChartImmersatable } from 'superset-plugin-chart-immersatable';
 
 export default class MainPreset extends Preset {
   constructor() {
@@ -163,6 +164,7 @@ export default class MainPreset extends Preset {
         new HandlebarsChartPlugin().configure({ key: 'handlebars' }),
         new EchartsBubbleChartPlugin().configure({ key: 'bubble_v2' }),
         ...experimentalPlugins,
+        new SupersetPluginChartImmersatable().configure({ key: 'ext-immersa-table' }),
       ],
     });
   }
