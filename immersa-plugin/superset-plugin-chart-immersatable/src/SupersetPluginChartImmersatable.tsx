@@ -20,7 +20,9 @@ import React, { useEffect, createRef, useMemo, useState } from 'react';
 import { styled } from '@superset-ui/core';
 import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 import { ChartData, DataType, SupersetPluginChartImmersatableProps, SupersetPluginChartImmersatableStylesProps } from './types';
+
 import { TimeSeriesCell } from './TimeSeries';
+
 
 // The following Styles component is a <div> element, which has been styled using Emotion
 // For docs, visit https://emotion.sh/docs/styled
