@@ -17,7 +17,7 @@
  * under the License.
  */
 import { ChartProps } from '@superset-ui/core';
-import { VaccineData } from '../types';
+import { DataType } from '../types';
 
 export default function transformProps(chartProps: ChartProps) {
   /**
@@ -51,14 +51,7 @@ export default function transformProps(chartProps: ChartProps) {
    */
   const { width, height, formData, queriesData } = chartProps;
   const { boldText, headerFontSize, headerText } = formData;
-  const defaultData = queriesData[0].data as VaccineData[];
-
-  const data = defaultData.map((row) => {
-    return {
-     ...row,
-    }
-  });
-  console.log('mydata', data);
+  const data = queriesData[0].data as DataType[];
 
   return {
     width,

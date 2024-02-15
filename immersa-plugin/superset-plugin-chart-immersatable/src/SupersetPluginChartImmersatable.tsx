@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { useEffect, createRef, useMemo } from 'react';
+import React, { useEffect, createRef, useMemo, useState } from 'react';
 import { styled } from '@superset-ui/core';
+import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 import { ChartData, DataType, SupersetPluginChartImmersatableProps, SupersetPluginChartImmersatableStylesProps } from './types';
-import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { TimeSeriesCell } from './TimeSeries';
 
 // The following Styles component is a <div> element, which has been styled using Emotion
@@ -52,26 +52,67 @@ const Styles = styled.div<SupersetPluginChartImmersatableStylesProps>`
   }
 `;
 
-const CustomStyle = {
-  container: {
-    border: "1px solid #d1d5db",
-    borderRadius: "1rem",
-    margin: "10px",
-    width: "fit-content",
-  },
-  headerText: {
-    padding: "17px 24px",
-    border: "1px solid #d1d5db",
-    borderTopLeftRadius: "1rem",
-    borderTopRightRadius: "1rem",
-    background: "#f3f4f6",
-    fontSize: "1.4rem",
-    fontWeight: "bold !important",
-    color: "rgb(107 114 128)"
-  }
-};
+const ContainerStyle = styled.div`
+  border: 1px solid #d1d5db;
+  border-radius: 1rem;
+  margin: 10px;
+  width: fit-content;
+  overflow: hidden;
+`;
 
+const HeaderText = styled.div`
+  padding: 17px 24px;
+  border: 1px solid #d1d5db;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  background: #f3f4f6;
+  font-size: 1.4rem;
+  font-weight: bold !important;
+  color: rgb(107, 114, 128);
+`;
 
+const TableHeaderGroup = styled.div`
+  display: flex;
+  background: #f9fafb;
+`;
+
+const TableHeader = styled.div`
+  width: 220px;
+  display: flex;
+  position: relative;
+  border: 1px solid #d1d5db;
+  text-transform: capitalize;
+`;
+
+const TableColumn = styled.div`
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  padding: 0.875rem 1rem;
+  text-align: left;
+  display: flex;
+`;
+
+const TableColumnText = styled.div`
+  overflow-wrap: break-word;
+  width: 180px;
+  font-weight: bold;
+`;
+
+const TableRow = styled.div`
+ display: flex;
+`;
+
+const TableCell = styled.div`
+  width: 220px;
+  display: flex;
+  position: relative;
+  border: 1px solid #d1d5db;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  max-height: 3rem;
+  padding: 0.875rem 1rem;
+  text-align: left;
+`;
 
 
 /**
@@ -86,6 +127,7 @@ export default function SupersetPluginChartImmersatable(props: SupersetPluginCha
   // height and width are the height and width of the DOM element as it exists in the dashboard.
   // There is also a `data` prop, which is, of course, your DATA 🎉
   const { data, height, width } = props;
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const rootElem = createRef<HTMLDivElement>();
 
@@ -151,6 +193,12 @@ export default function SupersetPluginChartImmersatable(props: SupersetPluginCha
   const table = useReactTable({
     data,
     columns,
+    state: {
+      columnOrder: columnsMetadata.map((column) => column.name) || [],
+      sorting,
+    },
+    onSortingChange: setSorting, 
+    getSortedRowModel: getSortedRowModel(),
     getCoreRowModel: getCoreRowModel(),
   })
 
@@ -162,45 +210,23 @@ export default function SupersetPluginChartImmersatable(props: SupersetPluginCha
       height={height}
       width={width}
     >
-      <div style={CustomStyle.container}>
-      <div style={CustomStyle.headerText}>{props.headerText}</div>
+      <ContainerStyle>
+      <HeaderText>{props.headerText}</HeaderText>
 
       {table.getHeaderGroups().map((headerGroup) => (
-        <div
+        <TableHeaderGroup
           key={headerGroup.id}
-          style={{
-            display: "flex",
-            background: "#f9fafb",
-          }}
         >
-          {headerGroup.headers.map((header) => (
-            <div
+          {headerGroup.headers.map((header) => {
+           const { column } = header;
+              const columnSorting = column.getIsSorted();
+              const canSort = column.getCanSort();
+            return (
+            <TableHeader
               key={header.id}
-              className="headerStyled"
-              style={{
-                width: "200px",
-                display: "flex",
-                position: "relative",
-                border: "1px solid #d1d5db",
-                textTransform: "capitalize",
-              }}
             >
-              <div draggable="true">
-                <div
-                  style={{
-                    fontSize: "0.875rem",
-                    lineHeight: "1.25rem",
-                    padding: "0.875rem 1rem",
-                    textAlign: "left",
-                  }}
-                >
-                  <div
-                    style={{
-                      overflowWrap: "break-word",
-                      width: "180px",
-                      fontWeight: "bold",
-                      
-                    }}
+                <TableColumn>
+                  <TableColumnText
                   >
                     {header.isPlaceholder
                       ? null
@@ -208,48 +234,86 @@ export default function SupersetPluginChartImmersatable(props: SupersetPluginCha
                           header.column.columnDef.header,
                           header.getContext()
                         )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                  </TableColumnText>
+                    {canSort && (
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (!["Enter", " "].includes(e.key)) return;
+                            column.getToggleSortingHandler()?.(e);
+                          }}
+                          onClick={column.getToggleSortingHandler()}
+                          title="Sorting"
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              position: "relative",
+                            }}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              style={{
+                                height: "1.35rem",
+                                width: "1.35rem",
+                                color:
+                                  columnSorting === "asc" ? "orange" : "gray",
+                              }}
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 15a.75.75 0 01-.75-.75V7.612L7.29 9.77a.75.75 0 01-1.08-1.04l3.25-3.5a.75.75 0 011.08 0l3.25 3.5a.75.75 0 11-1.08 1.04l-1.96-2.158v6.638A.75.75 0 0110 15z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              style={{
+                                height: "1.35rem",
+                                width: "1.35rem",
+                                color:
+                                  columnSorting === "desc" ? "orange" : "gray",
+                                marginLeft: "0.4rem",
+                                marginTop: "0.25rem",
+                                position: "absolute",
+                              }}
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 5a.75.75 0 01.75.75v6.638l1.96-2.158a.75.75 0 111.08 1.04l-3.25 3.5a.75.75 0 01-1.08 0l-3.25-3.5a.75.75 0 111.08-1.04l1.96 2.158V5.75A.75.75 0 0110 5z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
+                  
+                </TableColumn>
+            </TableHeader>
+            )
+})}
+        </TableHeaderGroup>
       ))}
       {table.getRowModel().rows.map((row) => (
-        <div
-          key={row.id}
-          className="rowStyled"
-          style={{
-            display: "flex",
-          }}
+        <TableRow
+          key={row.id}  
         >
           {row.getVisibleCells().map((cell) => (
-            <div
+            <TableCell
               key={cell.id}
-              style={{
-                width: "200px",
-                display: "flex",
-                position: "relative",
-                border: "1px solid #d1d5db",
-              }}
             >
-              <div
-                style={{
-                  fontSize: "0.875rem",
-                  lineHeight: "1.25rem",
-                  maxHeight: "3rem",
-                  padding: "0.875rem 1rem",
-                  textAlign: "left",
-                }}
-              >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </div>
-            </div>
+            </TableCell>
           ))}
-        </div>
+        </TableRow>
       ))}
      
-    </div>
+    </ContainerStyle>
     </Styles>
   );
 }
