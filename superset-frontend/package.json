@@ -138,6 +138,8 @@
     "dom-to-pdf": "^0.3.2",
     "emotion-rgba": "0.0.12",
     "fast-glob": "^3.2.7",
+    "@visx/gradient": "^3.3.0",
+    "@airbnb/config-babel": "^2.2.4",
     "fontsource-fira-code": "^4.0.0",
     "fs-extra": "^10.0.0",
     "fuse.js": "^7.0.0",
