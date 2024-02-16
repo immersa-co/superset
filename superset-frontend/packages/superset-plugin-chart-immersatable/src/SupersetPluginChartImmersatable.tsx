@@ -152,7 +152,7 @@ export default function SupersetPluginChartImmersatable(
   );
 
   const { headerGroups, rows, prepareRow, getTableProps, getTableBodyProps } =
-    useTable(
+    useTable<DataType>(
       {
         columns,
         data,
