@@ -45,7 +45,9 @@
     "@types/d3-color": "3.1.0",
     "@visx/tooltip": "3.0.0",
     "@visx/gradient": "^3.3.0",
-    "@airbnb/config-babel": "^2.2.4"
+    "@airbnb/config-babel": "^2.2.4",
+    "react-window": "^1.8.8",
+    "@visx/vendor": "3.5.0"
   },
   "peerDependencies": {
     "@superset-ui/chart-controls": "*",

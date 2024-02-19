@@ -40,13 +40,6 @@ export type SupersetPluginChartImmersatableProps =
       // add typing here for the props you pass in from transformProps.ts!
     };
 
-// TData
-// export type VaccineData = {
-//   clinical_trials: string
-//   count: number
-//   chart_data: string
-// }
-
 export type ChartGenericDataItem = Record<string, string | number>;
 
 export type ChartGenericData = ChartGenericDataItem[];

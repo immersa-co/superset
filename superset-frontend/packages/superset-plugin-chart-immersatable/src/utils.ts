@@ -6,11 +6,7 @@ export const ChartAxisLineColor = '#d1d5db';
 
 export const ChartGridLineColor = '#f3f4f6';
 
-export const ChartSliderSeparation = 30;
-
 export const ChartSliderBorderPadding = 8;
-
-export const ChartSliderHeight = 32;
 
 export const ChartXYContainerDefaultMargin = {
   top: 0,

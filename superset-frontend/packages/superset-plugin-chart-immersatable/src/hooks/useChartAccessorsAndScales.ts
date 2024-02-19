@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from 'react';
 import { scaleTime, scaleLinear, scaleBand } from '@visx/scale';
-// import { extent } from 'd3-array';
 import { extent as d3Extent } from 'd3-array';
 import { rgb } from 'd3-color';
 

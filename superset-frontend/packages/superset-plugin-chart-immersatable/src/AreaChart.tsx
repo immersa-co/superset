@@ -10,8 +10,6 @@ import { useChartAccessorsAndScales } from './hooks';
 import {
   ChartBottomAxisBaseConfig,
   ChartLeftAxisBaseConfig,
-  ChartSliderHeight,
-  ChartSliderSeparation,
   formatDateForChart,
 } from './utils';
 
@@ -22,19 +20,15 @@ export interface IAreaChartProps {
   xField: string;
   yField: string;
   gradientColor: string;
-  gradientColorTo?: string;
   fromOpacity?: number;
   toOpacity?: number;
   width: number;
   height: number;
-  hasSlider?: boolean;
-  compact?: boolean;
   margin: ChartMargin;
   hideBottomAxis?: boolean;
   hideLeftAxis?: boolean;
   top?: number;
   left?: number;
-  children?: React.ReactNode;
 }
 
 export const AreaChart = ({
@@ -49,26 +43,15 @@ export const AreaChart = ({
   margin,
   hideBottomAxis = false,
   hideLeftAxis = false,
-  hasSlider = false,
-  compact = false,
-  gradientColorTo,
   fromOpacity = 1,
   toOpacity = 0.1,
   top,
   left,
-  children,
 }: IAreaChartProps) => {
   const bounds = useMemo(() => {
     const innerHeight = height - margin.top - margin.bottom;
     const innerWidth = width - margin.left - margin.right;
-    let chartHeight = innerHeight;
-
-    if (hasSlider) {
-      const sliderSeparation = compact
-        ? ChartSliderSeparation / 2
-        : ChartSliderSeparation;
-      chartHeight = innerHeight - sliderSeparation - ChartSliderHeight;
-    }
+    const chartHeight = innerHeight;
 
     const xMax = Math.max(innerWidth, 0);
     const yMax = Math.max(chartHeight, 0);
@@ -77,7 +60,7 @@ export const AreaChart = ({
       xMax,
       yMax,
     };
-  }, [compact, height, margin, width, hasSlider]);
+  }, [height, margin, width]);
 
   const { getXAxisValue, getYAxisValue, xScale, yScale } =
     useChartAccessorsAndScales({
@@ -97,7 +80,7 @@ export const AreaChart = ({
         id={`${id}-chart-gradient`}
         from={gradientColor}
         fromOpacity={fromOpacity}
-        to={gradientColorTo || gradientColor}
+        to={gradientColor}
         toOpacity={toOpacity}
       />
 
@@ -133,8 +116,6 @@ export const AreaChart = ({
           {...ChartLeftAxisBaseConfig}
         />
       )}
-
-      {children}
     </Group>
   );
 };

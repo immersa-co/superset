@@ -3,8 +3,13 @@
 import React, { ComponentProps, ComponentType, memo, useMemo } from 'react';
 import { scaleLinear, scaleTime } from '@visx/scale';
 import { extent as d3Extent, max as d3Max } from 'd3-array';
-import { useTooltip, defaultStyles, useTooltipInPortal } from '@visx/tooltip';
-
+import {
+  useTooltip,
+  defaultStyles,
+  useTooltipInPortal,
+  Tooltip,
+} from '@visx/tooltip';
+import { timeFormat } from '@visx/vendor/d3-time-format';
 import { ParentSize } from '@visx/responsive';
 import { AreaChart } from './AreaChart';
 import { ChartData, ChartDataItem } from './types';
@@ -28,17 +33,14 @@ const isUpwardTrend = (dataPoints: number[]) => {
   const { 0: first, [dataPoints.length - 1]: last } = dataPoints;
   return last >= first;
 };
-const tooltipStyles = {
-  ...defaultStyles,
-  backgroundColor: 'rgba(0,0,0,0.9)',
-  color: 'white',
-};
 
 const getValue = (datum: ChartDataItem) => datum.yAxis;
 
 const formatValue = (datum: ChartDataItem) => toStandardAmount(datum.yAxis);
 
 const getDate = (datum: ChartDataItem) => new Date(datum.xAxis);
+
+const formatDate = timeFormat("%b %d, '%y");
 
 export const withResponsive =
   (Component: ComponentType<any>) => (props: ComponentProps<any>) =>
@@ -59,7 +61,7 @@ const InlineTrackChart = withResponsive(
       right: 0,
     };
 
-    const { containerRef, TooltipInPortal } = useTooltipInPortal({
+    const { containerRef } = useTooltipInPortal({
       scroll: true,
     });
 
@@ -70,6 +72,8 @@ const InlineTrackChart = withResponsive(
     const isTrendingUp = isUpwardTrend(data.map(item => item.yAxis));
 
     const accentColor = isTrendingUp ? trendingUpColor : trendingDownColor;
+
+    const innerHeight = height - margin.top - margin.bottom;
 
     const yScale = useMemo(
       () =>
@@ -107,14 +111,14 @@ const InlineTrackChart = withResponsive(
             id={Math.random().toString(36)}
             data={data}
             dataType="date"
-            margin={margin}
             xField="xAxis"
             yField="yAxis"
-            width={width}
-            height={height}
             gradientColor={accentColor}
             fromOpacity={0.5}
             toOpacity={0.05}
+            width={width}
+            height={height}
+            margin={margin}
             hideBottomAxis
             hideLeftAxis
           />
@@ -137,16 +141,21 @@ const InlineTrackChart = withResponsive(
         </svg>
 
         {tooltipData && (
-          <TooltipInPortal
-            key={Math.random()}
-            top={tooltipTop}
+          <Tooltip
+            top={innerHeight + margin.top - 14}
             left={tooltipLeft}
-            style={tooltipStyles}
-            offsetLeft={6}
-            offsetTop={-13}
+            style={{
+              ...defaultStyles,
+              minWidth: 72,
+              textAlign: 'center',
+              transform: 'translateX(-50%)',
+            }}
           >
-            {formatValue(tooltipData)}
-          </TooltipInPortal>
+            {formatDate(getDate(tooltipData))}
+            <div style={{ paddingTop: '7px', fontWeight: '600' }}>
+              {formatValue(tooltipData)}
+            </div>
+          </Tooltip>
         )}
       </div>
     );
