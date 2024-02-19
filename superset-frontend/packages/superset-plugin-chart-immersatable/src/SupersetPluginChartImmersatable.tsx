@@ -1,7 +1,14 @@
 /* eslint-disable theme-colors/no-literal-colors */
 import React, { createRef, useMemo } from 'react';
 import { styled } from '@superset-ui/core';
-import { useTable, Column, useSortBy } from 'react-table';
+import {
+  useTable,
+  Column,
+  useSortBy,
+  useBlockLayout,
+  useResizeColumns,
+} from 'react-table';
+import { FixedSizeList as List } from 'react-window';
 import {
   ChartData,
   DataType,
@@ -9,6 +16,8 @@ import {
   SupersetPluginChartImmersatableStylesProps,
 } from './types';
 import { TimeSeriesCell } from './TimeSeries';
+
+const DEFAULT_COLUMN_MIN_WIDTH = 150;
 
 const Styles = styled.div<SupersetPluginChartImmersatableStylesProps>`
   padding: ${({ theme }) => theme.gridUnit * 2}px;
@@ -38,6 +47,10 @@ const ContainerStyle = styled.div`
   margin: 10px;
   width: fit-content;
   overflow: hidden;
+  &:hover {
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+      0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
 `;
 
 const HeaderText = styled.div`
@@ -57,7 +70,6 @@ const TableHeaderGroup = styled.div`
 `;
 
 const TableHeader = styled.div`
-  width: 220px;
   display: flex;
   position: relative;
   border: 1px solid #d1d5db;
@@ -65,7 +77,22 @@ const TableHeader = styled.div`
   padding: 0.875rem;
   min-height: 45px;
   &:hover {
-    background-color: #ffd9b3;
+    background-color: #fee9cd;
+    .resizer {
+      display: inline-block;
+      background: #fa8c16;
+      width: 7px;
+      height: 100%;
+      position: absolute;
+      right: 0;
+      top: 0;
+      transform: translateX(50%);
+      z-index: 1;
+      touch-action: none;
+    }
+    .isResizing {
+      background: #fa8c16;
+    }
   }
 `;
 
@@ -74,6 +101,7 @@ const TableColumn = styled.div`
   line-height: 1.25rem;
   text-align: left;
   display: flex;
+  padding-right: 5px;
 `;
 
 const TableColumnText = styled.div`
@@ -90,7 +118,7 @@ const TableRow = styled.div`
 `;
 
 const TableCell = styled.div`
-  width: 220px;
+  flex-grow: 1;
   display: flex;
   position: relative;
   border: 1px solid #d1d5db;
@@ -108,9 +136,21 @@ export default function SupersetPluginChartImmersatable(
 
   const rootElem = createRef<HTMLDivElement>();
 
-  const DEFAULT_COLUMN_MIN_WIDTH = 160;
+  const defaultColumn = useMemo(
+    () => ({
+      minWidth: 150,
+      width: 200,
+      maxWidth: 400,
+    }),
+    [],
+  );
 
-  const columnNames = useMemo(() => Object.keys(data[0]), [data]);
+  const columnNames = useMemo(() => {
+    if (data && data.length > 0) {
+      return Object.keys(data[0]);
+    }
+    return [];
+  }, [data]);
 
   const columnsMetadata = useMemo(
     () =>
@@ -156,8 +196,11 @@ export default function SupersetPluginChartImmersatable(
       {
         columns,
         data,
+        defaultColumn,
       },
       useSortBy,
+      useBlockLayout,
+      useResizeColumns,
     );
 
   return (
@@ -176,11 +219,13 @@ export default function SupersetPluginChartImmersatable(
             <TableHeaderGroup
               {...headerGroup.getHeaderGroupProps()}
               key={headerGroup.id}
+              style={{ width: '100%' }}
             >
               {headerGroup.headers.map(column => (
                 <TableHeader key={column.id}>
                   <div
                     {...column.getHeaderProps(column.getSortByToggleProps())}
+                    style={{ display: 'flex' }}
                   >
                     <TableColumn>
                       <TableColumnText {...column.getHeaderProps()}>
@@ -238,24 +283,38 @@ export default function SupersetPluginChartImmersatable(
                       </span>
                     </TableColumn>
                   </div>
+                  <div
+                    {...column.getResizerProps()}
+                    className={`resizer ${
+                      column.isResizing ? 'isResizing' : ''
+                    }`}
+                  />
                 </TableHeader>
               ))}
             </TableHeaderGroup>
           ))}
         </div>
         <div {...getTableBodyProps()}>
-          {rows.map(row => {
-            prepareRow(row);
-            return (
-              <TableRow {...row.getRowProps()}>
-                {row.cells.map((cell, index) => (
-                  <TableCell {...cell.getCellProps()}>
-                    {cell.render('Cell')}
-                  </TableCell>
-                ))}
-              </TableRow>
-            );
-          })}
+          <List
+            height={height - 50}
+            itemCount={rows.length}
+            itemSize={40}
+            width="100%"
+          >
+            {({ index }) => {
+              const row = rows[index];
+              prepareRow(row);
+              return (
+                <TableRow {...row.getRowProps()} style={{ width: '100%' }}>
+                  {row.cells.map(cell => (
+                    <TableCell {...cell.getCellProps()}>
+                      {cell.render('Cell')}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            }}
+          </List>
         </div>
       </ContainerStyle>
     </Styles>
