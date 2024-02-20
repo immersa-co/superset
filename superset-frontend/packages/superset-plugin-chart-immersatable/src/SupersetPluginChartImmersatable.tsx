@@ -9,6 +9,7 @@ import {
   useResizeColumns,
 } from 'react-table';
 import { FixedSizeList as List } from 'react-window';
+import moment from 'moment';
 import {
   ChartData,
   DataType,
@@ -129,10 +130,123 @@ const TableCell = styled.div`
   text-align: left;
 `;
 
+// const startDate = new Date('2023-02-12T12:00:00.000');
+// const endDate = new Date('2023-03-14T12:00:00.000');
+
+interface CustomData {
+  [key: string]: any;
+}
+
+// We will be removing this once we have more than one timeRange type
+// const tempTimeRangeList = [
+//   'Last day',
+//   'Last week',
+//   'Last month',
+//   'Last quarter',
+//   'Last year',
+// ];
+
+const getDateRange = (timeRange: string) => {
+  const dateFormat = 'YYYY-MM-DDTHH:mm:ss.SSS';
+  switch (timeRange) {
+    case 'Last day':
+      return {
+        startDate: moment()
+          .subtract(1, 'day')
+          .startOf('day')
+          .format(dateFormat),
+        endDate: moment().startOf('day').format(dateFormat),
+      };
+    case 'Last week':
+      return {
+        startDate: moment()
+          .subtract(1, 'week')
+          .startOf('day')
+          .format(dateFormat),
+        endDate: moment().startOf('day').format(dateFormat),
+      };
+    case 'Last month':
+      return {
+        startDate: moment()
+          .subtract(1, 'month')
+          .startOf('day')
+          .format(dateFormat),
+        endDate: moment().startOf('day').format(dateFormat),
+      };
+    case 'Last quarter':
+      return {
+        startDate: moment()
+          .subtract(1, 'quarter')
+          .startOf('day')
+          .format(dateFormat),
+        endDate: moment().startOf('day').format(dateFormat),
+      };
+    case 'Last year':
+      return {
+        startDate: moment()
+          .subtract(1, 'year')
+          .startOf('day')
+          .format(dateFormat),
+        endDate: moment().startOf('day').format(dateFormat),
+      };
+    default:
+      // eslint-disable-next-line no-case-declarations
+      const customDates = timeRange.split(' : ');
+      return { startDate: customDates[0], endDate: customDates[1] };
+  }
+};
+
+const filterDataByDateInterval = (
+  data: string,
+  startDate: string,
+  endDate: string,
+) =>
+  JSON.parse(data).filter((item: (string | number | Date)[]) => {
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    const itemDate = new Date(item[0]);
+    return itemDate >= startDateObj && itemDate <= endDateObj;
+  });
+
+const processCustomData = (
+  myData: CustomData[],
+  timeRangeCols: string[],
+  timeRange: string,
+) => {
+  const { startDate, endDate } = getDateRange(timeRange);
+  return myData.map(customdata => {
+    const updatedCustomdata = { ...customdata };
+    const keysArray = Object.keys(updatedCustomdata);
+    // eslint-disable-next-line no-restricted-syntax
+    for (const item of keysArray) {
+      const value = updatedCustomdata[item];
+      if (
+        timeRangeCols.includes(item) &&
+        timeRange &&
+        value?.toString().includes('[') &&
+        Array.isArray(JSON.parse(value))
+      ) {
+        const filteredData = filterDataByDateInterval(
+          value,
+          startDate,
+          endDate,
+        );
+        updatedCustomdata[item] = JSON.stringify(filteredData);
+      }
+    }
+    return updatedCustomdata;
+  });
+};
+
 export default function SupersetPluginChartImmersatable(
   props: SupersetPluginChartImmersatableProps,
 ) {
-  const { data, height, width } = props;
+  const { data, height, width, timeRange, timeRangeCols } = props;
+
+  const myData = useMemo(
+    () => processCustomData(data, timeRangeCols, timeRange),
+    [data, timeRange, timeRangeCols],
+  );
 
   const rootElem = createRef<HTMLDivElement>();
 
@@ -146,11 +260,11 @@ export default function SupersetPluginChartImmersatable(
   );
 
   const columnNames = useMemo(() => {
-    if (data && data.length > 0) {
-      return Object.keys(data[0]);
+    if (myData && myData.length > 0) {
+      return Object.keys(myData[0]);
     }
     return [];
-  }, [data]);
+  }, [myData]);
 
   const columnsMetadata = useMemo(
     () =>
@@ -195,7 +309,7 @@ export default function SupersetPluginChartImmersatable(
     useTable<DataType>(
       {
         columns,
-        data,
+        data: myData,
         defaultColumn,
       },
       useSortBy,

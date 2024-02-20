@@ -149,6 +149,8 @@ const InlineTrackChart = withResponsive(
               minWidth: 72,
               textAlign: 'center',
               transform: 'translateX(-50%)',
+              border: '1px solid #808080',
+              zIndex: 9999,
             }}
           >
             {formatDate(getDate(tooltipData))}
