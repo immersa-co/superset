@@ -47,7 +47,8 @@
     "@visx/gradient": "^3.3.0",
     "@airbnb/config-babel": "^2.2.4",
     "react-window": "^1.8.8",
-    "@visx/vendor": "3.5.0"
+    "@visx/vendor": "3.5.0",
+    "moment": "^2.25.3"
   },
   "peerDependencies": {
     "@superset-ui/chart-controls": "*",

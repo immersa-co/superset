@@ -120,7 +120,7 @@ const config: ControlPanelConfig = {
               ...sharedControls.metrics,
               // it's possible to add validators to controls if
               // certain selections/types need to be enforced
-              // validators: [validateNonEmpty],
+              validators: [],
             },
           },
         ],
@@ -181,6 +181,31 @@ const config: ControlPanelConfig = {
               ],
               renderTrigger: true,
               description: t('The size of your header font'),
+            },
+          },
+        ],
+        [
+          {
+            name: 'time_range_cols',
+            config: {
+              ...sharedControls.groupby,
+              label: t('Filter Columns'),
+              renderTrigger: true,
+              description: t('Select Columns for time range filter'),
+            },
+          },
+        ],
+        [
+          {
+            name: 'time_range',
+            config: {
+              type: 'DateFilterControl',
+              label: t('Time Range'),
+              // default: 'custom',
+              // choices: [['custom', 'Custom']],
+              // freeForm: true,
+              renderTrigger: true,
+              description: t('Select the desired time range'),
             },
           },
         ],
