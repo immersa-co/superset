@@ -201,9 +201,8 @@ const config: ControlPanelConfig = {
             config: {
               type: 'DateFilterControl',
               label: t('Time Range'),
-              // default: 'custom',
-              // choices: [['custom', 'Custom']],
-              // freeForm: true,
+              default: 'custom',
+              freeForm: true,
               renderTrigger: true,
               description: t('Select the desired time range'),
             },

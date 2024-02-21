@@ -9,14 +9,14 @@ import {
   useResizeColumns,
 } from 'react-table';
 import { FixedSizeList as List } from 'react-window';
-import moment from 'moment';
 import {
   ChartData,
   DataType,
   SupersetPluginChartImmersatableProps,
   SupersetPluginChartImmersatableStylesProps,
 } from './types';
-import { TimeSeriesCell } from './TimeSeries';
+// import { TimeSeriesCell } from './TimeSeries';
+import { LineSeriesChart } from './LineSeriesChart';
 
 const DEFAULT_COLUMN_MIN_WIDTH = 150;
 
@@ -120,100 +120,37 @@ const TableRow = styled.div`
 
 const TableCell = styled.div`
   flex-grow: 1;
-  display: flex;
   position: relative;
   border: 1px solid #d1d5db;
   font-size: 0.875rem;
   line-height: 1.25rem;
-  max-height: 3rem;
-  padding: 0.875rem 1rem;
+  max-height: 5rem;
   text-align: left;
 `;
-
-// const startDate = new Date('2023-02-12T12:00:00.000');
-// const endDate = new Date('2023-03-14T12:00:00.000');
 
 interface CustomData {
   [key: string]: any;
 }
 
-// We will be removing this once we have more than one timeRange type
-// const tempTimeRangeList = [
-//   'Last day',
-//   'Last week',
-//   'Last month',
-//   'Last quarter',
-//   'Last year',
-// ];
-
-const getDateRange = (timeRange: string) => {
-  const dateFormat = 'YYYY-MM-DDTHH:mm:ss.SSS';
-  switch (timeRange) {
-    case 'Last day':
-      return {
-        startDate: moment()
-          .subtract(1, 'day')
-          .startOf('day')
-          .format(dateFormat),
-        endDate: moment().startOf('day').format(dateFormat),
-      };
-    case 'Last week':
-      return {
-        startDate: moment()
-          .subtract(1, 'week')
-          .startOf('day')
-          .format(dateFormat),
-        endDate: moment().startOf('day').format(dateFormat),
-      };
-    case 'Last month':
-      return {
-        startDate: moment()
-          .subtract(1, 'month')
-          .startOf('day')
-          .format(dateFormat),
-        endDate: moment().startOf('day').format(dateFormat),
-      };
-    case 'Last quarter':
-      return {
-        startDate: moment()
-          .subtract(1, 'quarter')
-          .startOf('day')
-          .format(dateFormat),
-        endDate: moment().startOf('day').format(dateFormat),
-      };
-    case 'Last year':
-      return {
-        startDate: moment()
-          .subtract(1, 'year')
-          .startOf('day')
-          .format(dateFormat),
-        endDate: moment().startOf('day').format(dateFormat),
-      };
-    default:
-      // eslint-disable-next-line no-case-declarations
-      const customDates = timeRange.split(' : ');
-      return { startDate: customDates[0], endDate: customDates[1] };
-  }
-};
-
 const filterDataByDateInterval = (
   data: string,
-  startDate: string,
-  endDate: string,
+  startDate: Date,
+  endDate: Date,
 ) =>
   JSON.parse(data).filter((item: (string | number | Date)[]) => {
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
     const itemDate = new Date(item[0]);
-    return itemDate >= startDateObj && itemDate <= endDateObj;
+    return itemDate >= startDate && itemDate <= endDate;
   });
 
 const processCustomData = (
   myData: CustomData[],
   timeRangeCols: string[],
-  timeRange: string,
+  timeSinceUntil: {
+    startDate: Date;
+    endDate: Date;
+  },
 ) => {
-  const { startDate, endDate } = getDateRange(timeRange);
+  const { startDate, endDate } = timeSinceUntil;
   return myData.map(customdata => {
     const updatedCustomdata = { ...customdata };
     const keysArray = Object.keys(updatedCustomdata);
@@ -222,7 +159,8 @@ const processCustomData = (
       const value = updatedCustomdata[item];
       if (
         timeRangeCols.includes(item) &&
-        timeRange &&
+        startDate &&
+        endDate &&
         value?.toString().includes('[') &&
         Array.isArray(JSON.parse(value))
       ) {
@@ -241,11 +179,11 @@ const processCustomData = (
 export default function SupersetPluginChartImmersatable(
   props: SupersetPluginChartImmersatableProps,
 ) {
-  const { data, height, width, timeRange, timeRangeCols } = props;
+  const { data, height, width, timeRangeCols, timeSinceUntil } = props;
 
   const myData = useMemo(
-    () => processCustomData(data, timeRangeCols, timeRange),
-    [data, timeRange, timeRangeCols],
+    () => processCustomData(data, timeRangeCols, timeSinceUntil),
+    [data, timeSinceUntil, timeRangeCols],
   );
 
   const rootElem = createRef<HTMLDivElement>();
@@ -296,7 +234,8 @@ export default function SupersetPluginChartImmersatable(
               yAxis: row[1],
             }));
             return (
-              <TimeSeriesCell value="" chartData={chartData as ChartData} />
+              // <TimeSeriesCell value="" chartData={chartData as ChartData} />
+              <LineSeriesChart chartData={chartData as ChartData} />
             );
           }
           return value;
@@ -422,7 +361,9 @@ export default function SupersetPluginChartImmersatable(
                 <TableRow {...row.getRowProps()} style={{ width: '100%' }}>
                   {row.cells.map(cell => (
                     <TableCell {...cell.getCellProps()}>
-                      {cell.render('Cell')}
+                      <div style={{ padding: '0.475rem 1rem' }}>
+                        {cell.render('Cell')}
+                      </div>
                     </TableCell>
                   ))}
                 </TableRow>
