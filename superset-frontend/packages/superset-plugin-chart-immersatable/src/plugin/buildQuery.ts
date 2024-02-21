@@ -32,6 +32,7 @@ import { buildQueryContext, QueryFormData } from '@superset-ui/core';
  * it is possible to define post processing operations in the QueryObject, or multiple queries
  * if a viz needs multiple different result sets.
  */
+
 export default function buildQuery(formData: QueryFormData) {
   const { cols: groupby } = formData;
   return buildQueryContext(formData, baseQueryObject => [

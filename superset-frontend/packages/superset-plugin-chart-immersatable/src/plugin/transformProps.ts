@@ -18,6 +18,7 @@
  */
 import { ChartProps } from '@superset-ui/core';
 import { DataType } from '../types';
+import { getSinceUntil } from '../utils';
 
 export default function transformProps(chartProps: ChartProps) {
   /**
@@ -52,6 +53,9 @@ export default function transformProps(chartProps: ChartProps) {
   const { width, height, formData, queriesData } = chartProps;
   const { boldText, headerFontSize, headerText, timeRange, timeRangeCols } =
     formData;
+
+  const [startDate, endDate] = getSinceUntil(timeRange.toLocaleLowerCase());
+
   const data = queriesData[0].data as DataType[];
 
   return {
@@ -62,7 +66,10 @@ export default function transformProps(chartProps: ChartProps) {
     boldText,
     headerFontSize,
     headerText,
-    timeRange,
+    timeSinceUntil: {
+      startDate,
+      endDate,
+    },
     timeRangeCols,
   };
 }

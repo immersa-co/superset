@@ -37,7 +37,10 @@ export type SupersetPluginChartImmersatableProps =
   SupersetPluginChartImmersatableStylesProps &
     SupersetPluginChartHelloWorldCustomizeProps & {
       data: DataType[];
-      timeRange: string;
+      timeSinceUntil: {
+        startDate: Date;
+        endDate: Date;
+      };
       timeRangeCols: string[];
       // add typing here for the props you pass in from transformProps.ts!
     };
