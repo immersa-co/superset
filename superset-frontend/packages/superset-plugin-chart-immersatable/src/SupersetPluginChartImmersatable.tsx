@@ -1,6 +1,6 @@
 /* eslint-disable theme-colors/no-literal-colors */
 import React, { CSSProperties, createRef, useMemo, useCallback } from 'react';
-import { styled, DataRecordValue, t, DataRecord } from '@superset-ui/core';
+import { styled, DataRecordValue, t } from '@superset-ui/core';
 import {
   useTable,
   useSortBy,
@@ -215,10 +215,7 @@ export default function SupersetPluginChartImmersatable(
   );
 
   const getColumnConfigs = useCallback(
-    (
-      column: DataColumnMeta,
-      i: number,
-    ): ColumnWithLooseAccessor<DataRecord> => {
+    (column: DataColumnMeta, i: number): ColumnWithLooseAccessor<any> => {
       const { key, label, isMetric, config = {} } = column;
       const columnWidth = Number.isNaN(Number(config.columnWidth))
         ? config.columnWidth
