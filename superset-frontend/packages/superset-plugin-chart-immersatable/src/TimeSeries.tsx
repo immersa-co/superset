@@ -9,15 +9,15 @@ export interface ITimeSeriesCellProps {
 
 export const TimeSeriesCell = memo(
   ({ value, chartData }: ITimeSeriesCellProps) => (
-    <div className="flex space-x-3">
+    <div style={{ width: '100%', height: '100%' }}>
       {value !== null && value !== undefined ? (
         <span className="text-left">{value}</span>
       ) : null}
 
       {chartData ? (
-        <div className="h-full w-full flex-1">
+        <div style={{ width: '100%', height: '100%' }}>
           <Suspense fallback={null}>
-            <CohortInlineTrackChart data={chartData} width="160" />
+            <CohortInlineTrackChart data={chartData} />
           </Suspense>
         </div>
       ) : null}
