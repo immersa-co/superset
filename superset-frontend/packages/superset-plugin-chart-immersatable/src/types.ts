@@ -16,7 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { QueryFormData, supersetTheme } from '@superset-ui/core';
+import {
+  QueryFormData,
+  supersetTheme,
+  DataRecordFilters,
+} from '@superset-ui/core';
+import { DataColumnMeta } from './plugin/transformProps';
 
 export interface SupersetPluginChartImmersatableStylesProps {
   height: number;
@@ -42,6 +47,10 @@ export type SupersetPluginChartImmersatableProps =
         endDate: Date;
       };
       timeRangeCols: string[];
+      columns: DataColumnMeta[];
+      emitCrossFilters?: boolean;
+      allowRearrangeColumns?: boolean;
+      filters?: DataRecordFilters;
       // add typing here for the props you pass in from transformProps.ts!
     };
 

@@ -105,7 +105,7 @@ const InlineTrackChart = withResponsive(
     if (!data.length) return <span>-</span>;
 
     return (
-      <div className="relative h-full" ref={containerRef}>
+      <div style={{ width: '100%', height: '100%' }} ref={containerRef}>
         <svg width={width} height={25}>
           <AreaChart
             id={Math.random().toString(36)}

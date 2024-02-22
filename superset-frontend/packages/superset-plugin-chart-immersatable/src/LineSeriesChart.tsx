@@ -25,6 +25,18 @@ const accessors = {
   yAccessor: (datum: ChartDataItem) => datum.yAxis,
 };
 
+const ChartContainer = styled.div`
+  rect {
+    height: 70px;
+    y: 10;
+  }
+  svg {
+    display: flex;
+    align-items: center;
+  }
+  padding: 0.2rem 0.4rem;
+`;
+
 const ColoredSquare = styled.div`
   display: inline-block;
   width: 11px;
@@ -62,48 +74,50 @@ export const LineSeriesChart = memo(({ chartData }: ILineSeriesChartProps) => {
   const isTrendingUp = isUpwardTrend(chartData.map(item => item.yAxis));
   const accentColor = isTrendingUp ? trendingUpColor : trendingDownColor;
   return (
-    <XYChart
-      height={105}
-      xScale={{ type: 'band' }}
-      yScale={{ type: 'linear' }}
-      margin={{ top: 50, left: 5, right: 5, bottom: 50 }}
-    >
-      <AnimatedLineSeries
-        dataKey="Line 1"
-        data={chartData}
-        {...accessors}
-        stroke={accentColor}
-      />
+    <ChartContainer>
+      <XYChart
+        height={102}
+        xScale={{ type: 'band' }}
+        yScale={{ type: 'linear' }}
+        margin={{ top: 50, left: 5, right: 5, bottom: 50 }}
+      >
+        <AnimatedLineSeries
+          dataKey="Line 1"
+          data={chartData}
+          {...accessors}
+          stroke={accentColor}
+        />
 
-      <Tooltip<ChartDataItem>
-        snapTooltipToDatumX
-        snapTooltipToDatumY
-        showVerticalCrosshair
-        showSeriesGlyphs
-        style={{
-          ...defaultStyles,
-          textAlign: 'center',
-          backgroundColor: '#F8F8FF',
-        }}
-        renderTooltip={({ tooltipData }) => {
-          const { nearestDatum }: any = tooltipData;
-          return (
-            <TooltipContainer>
-              <div className="row">
-                <div className="date">
-                  {formatDate(getDate(nearestDatum.datum))}
-                </div>
-                <div className="value">
-                  <ColoredSquare color={accentColor} />
-                  <div style={{ fontWeight: '600' }}>
-                    {accessors.yAccessor(nearestDatum.datum)}
+        <Tooltip<ChartDataItem>
+          snapTooltipToDatumX
+          snapTooltipToDatumY
+          showVerticalCrosshair
+          showSeriesGlyphs
+          style={{
+            ...defaultStyles,
+            textAlign: 'center',
+            backgroundColor: '#F8F8FF',
+          }}
+          renderTooltip={({ tooltipData }) => {
+            const { nearestDatum }: any = tooltipData;
+            return (
+              <TooltipContainer>
+                <div className="row">
+                  <div className="date">
+                    {formatDate(getDate(nearestDatum.datum))}
+                  </div>
+                  <div className="value">
+                    <ColoredSquare color={accentColor} />
+                    <div style={{ fontWeight: '600' }}>
+                      {accessors.yAccessor(nearestDatum.datum)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </TooltipContainer>
-          );
-        }}
-      />
-    </XYChart>
+              </TooltipContainer>
+            );
+          }}
+        />
+      </XYChart>
+    </ChartContainer>
   );
 });

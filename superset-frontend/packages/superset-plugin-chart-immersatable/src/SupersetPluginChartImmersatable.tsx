@@ -1,12 +1,12 @@
 /* eslint-disable theme-colors/no-literal-colors */
-import React, { createRef, useMemo } from 'react';
-import { styled } from '@superset-ui/core';
+import React, { CSSProperties, createRef, useMemo, useCallback } from 'react';
+import { styled, DataRecordValue, t, DataRecord } from '@superset-ui/core';
 import {
   useTable,
-  Column,
   useSortBy,
   useBlockLayout,
   useResizeColumns,
+  ColumnWithLooseAccessor,
 } from 'react-table';
 import { FixedSizeList as List } from 'react-window';
 import {
@@ -17,8 +17,14 @@ import {
 } from './types';
 // import { TimeSeriesCell } from './TimeSeries';
 import { LineSeriesChart } from './LineSeriesChart';
+import { DataColumnMeta } from './plugin/transformProps';
+import { checkChartData, formatColumnValue } from './utils';
 
-const DEFAULT_COLUMN_MIN_WIDTH = 150;
+const ACTION_KEYS = {
+  enter: 'Enter',
+  spacebar: 'Spacebar',
+  space: ' ',
+};
 
 const Styles = styled.div<SupersetPluginChartImmersatableStylesProps>`
   padding: ${({ theme }) => theme.gridUnit * 2}px;
@@ -100,7 +106,6 @@ const TableHeader = styled.div`
 const TableColumn = styled.div`
   font-size: 0.875rem;
   line-height: 1.25rem;
-  text-align: left;
   display: flex;
   padding-right: 5px;
 `;
@@ -124,8 +129,7 @@ const TableCell = styled.div`
   border: 1px solid #d1d5db;
   font-size: 0.875rem;
   line-height: 1.25rem;
-  max-height: 5rem;
-  text-align: left;
+  min-height: 3rem;
 `;
 
 interface CustomData {
@@ -179,7 +183,178 @@ const processCustomData = (
 export default function SupersetPluginChartImmersatable(
   props: SupersetPluginChartImmersatableProps,
 ) {
-  const { data, height, width, timeRangeCols, timeSinceUntil } = props;
+  const {
+    data,
+    height,
+    width,
+    timeRangeCols,
+    timeSinceUntil,
+    columns: columnsMeta,
+    emitCrossFilters,
+    allowRearrangeColumns = false,
+    filters,
+  } = props;
+
+  const getSharedStyle = (column: DataColumnMeta): CSSProperties => {
+    const { isNumeric, config = {} } = column;
+    const textAlign = config.horizontalAlign
+      ? config.horizontalAlign
+      : isNumeric
+      ? 'right'
+      : 'left';
+    return {
+      textAlign,
+    };
+  };
+
+  const isActiveFilterValue = useCallback(
+    function isActiveFilterValue(key: string, val: DataRecordValue) {
+      return !!filters && filters[key]?.includes(val);
+    },
+    [filters],
+  );
+
+  const getColumnConfigs = useCallback(
+    (
+      column: DataColumnMeta,
+      i: number,
+    ): ColumnWithLooseAccessor<DataRecord> => {
+      const { key, label, isMetric, config = {} } = column;
+      const columnWidth = Number.isNaN(Number(config.columnWidth))
+        ? config.columnWidth
+        : Number(config.columnWidth);
+
+      const sharedStyle: CSSProperties = getSharedStyle(column);
+
+      let className = '';
+      if (emitCrossFilters && !isMetric) {
+        className += ' dt-is-filter';
+      }
+
+      const { truncateLongCells } = config;
+
+      return {
+        id: String(i), // to allow duplicate column keys
+        // must use custom accessor to allow `.` in column names
+        // typing is incorrect in current version of `@types/react-table`
+        // so we ask TS not to check.
+        accessor: ((datum: { [x: string]: any }) => datum[key]) as never,
+        Cell: ({ value }: { value: DataRecordValue }) => {
+          const formattedColumnValue = formatColumnValue(column, value);
+          const text = formattedColumnValue[1];
+          let backgroundColor;
+          const StyledCell = styled.td`
+            text-align: ${sharedStyle.textAlign};
+            white-space: ${value instanceof Date ? 'nowrap' : undefined};
+            position: relative;
+            background: ${backgroundColor || undefined};
+          `;
+
+          const cellProps = {
+            // show raw number in title in case of numeric values
+            title: typeof value === 'number' ? String(value) : undefined,
+            className: [
+              className,
+              value == null ? 'dt-is-null' : '',
+              isActiveFilterValue(key, value) ? ' dt-is-active-filter' : '',
+            ].join(' '),
+          };
+
+          const isChartData = checkChartData(text);
+          if (isChartData) {
+            const chartData = JSON.parse(text).map((row: any) => ({
+              xAxis: row[0],
+              yAxis: row[1],
+            }));
+            return (
+              <LineSeriesChart chartData={chartData as ChartData} />
+              // <StyledCell
+              //   {...cellProps}
+              //   style={{ minWidth: '200px', padding: '0.2rem 0.4rem' }}
+              // >
+              //   <LineSeriesChart chartData={chartData as ChartData} />
+              // </StyledCell>
+            );
+          }
+          return (
+            <StyledCell
+              {...cellProps}
+              style={{ width: '200px', padding: '1.2rem 2rem' }}
+            >
+              {truncateLongCells ? (
+                <div
+                  className="dt-truncate-cell"
+                  style={columnWidth ? { width: columnWidth } : undefined}
+                >
+                  {text}
+                </div>
+              ) : (
+                text
+              )}
+            </StyledCell>
+          );
+        },
+
+        Header: ({ column: col, onClick, style, onDragStart, onDrop }) => (
+          <th
+            title={t('Shift + Click to sort by multiple columns')}
+            className={[className, col.isSorted ? 'is-sorted' : ''].join(' ')}
+            style={{
+              ...sharedStyle,
+              ...style,
+            }}
+            tabIndex={0}
+            onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
+              // programatically sort column on keypress
+              if (Object.values(ACTION_KEYS).includes(e.key)) {
+                col.toggleSortBy();
+              }
+            }}
+            onClick={onClick}
+            data-column-name={col.id}
+            {...(allowRearrangeColumns && {
+              draggable: 'true',
+              onDragStart,
+              onDragOver: e => e.preventDefault(),
+              onDragEnter: e => e.preventDefault(),
+              onDrop,
+            })}
+          >
+            {/* can't use `columnWidth &&` because it may also be zero */}
+            {config.columnWidth ? (
+              // column width hint
+              <div
+                style={{
+                  width: columnWidth,
+                  height: 0.01,
+                }}
+              />
+            ) : null}
+            <div
+              data-column-name={col.id}
+              css={{
+                display: 'inline-flex',
+                alignItems: 'flex-end',
+              }}
+            >
+              <span
+                data-column-name={col.id}
+                style={{ overflowWrap: 'anywhere' }}
+              >
+                {label}
+              </span>
+            </div>
+          </th>
+        ),
+      };
+    },
+    [allowRearrangeColumns, emitCrossFilters, isActiveFilterValue],
+  );
+
+  const columns = useMemo(
+    () => columnsMeta.map(getColumnConfigs),
+    [columnsMeta, getColumnConfigs],
+  );
 
   const myData = useMemo(
     () => processCustomData(data, timeRangeCols, timeSinceUntil),
@@ -197,52 +372,52 @@ export default function SupersetPluginChartImmersatable(
     [],
   );
 
-  const columnNames = useMemo(() => {
-    if (myData && myData.length > 0) {
-      return Object.keys(myData[0]);
-    }
-    return [];
-  }, [myData]);
+  // const columnNames = useMemo(() => {
+  //   if (myData && myData.length > 0) {
+  //     return Object.keys(myData[0]);
+  //   }
+  //   return [];
+  // }, [myData]);
 
-  const columnsMetadata = useMemo(
-    () =>
-      columnNames.map(metadata => ({
-        width: DEFAULT_COLUMN_MIN_WIDTH,
-        name: metadata,
-        label: metadata,
-        minWidth: null,
-        maxWidth: null,
-        sortable: true,
-        sortDescFirst: true,
-      })),
-    [columnNames],
-  );
+  // const columnsMetadata = useMemo(
+  //   () =>
+  //     columnNames.map(metadata => ({
+  //       width: DEFAULT_COLUMN_MIN_WIDTH,
+  //       name: metadata,
+  //       label: metadata,
+  //       minWidth: null,
+  //       maxWidth: null,
+  //       sortable: true,
+  //       sortDescFirst: true,
+  //     })),
+  //   [columnNames],
+  // );
 
-  const columns: Column<DataType>[] = useMemo(
-    () =>
-      columnsMetadata.map(columnMetadata => ({
-        Header: columnMetadata.label,
-        accessor: columnMetadata.name,
-        Cell: (info: any) => {
-          const { value } = info;
-          if (
-            value?.toString().includes('[') &&
-            Array.isArray(JSON.parse(value as string))
-          ) {
-            const chartData = JSON.parse(value).map((row: any) => ({
-              xAxis: row[0],
-              yAxis: row[1],
-            }));
-            return (
-              // <TimeSeriesCell value="" chartData={chartData as ChartData} />
-              <LineSeriesChart chartData={chartData as ChartData} />
-            );
-          }
-          return value;
-        },
-      })),
-    [columnsMetadata],
-  );
+  // const columns: Column<DataType>[] = useMemo(
+  //   () =>
+  //     columnsMetadata.map(columnMetadata => ({
+  //       Header: columnMetadata.label,
+  //       accessor: columnMetadata.name,
+  //       Cell: (info: any) => {
+  //         const { value } = info;
+  //         if (
+  //           value?.toString().includes('[') &&
+  //           Array.isArray(JSON.parse(value as string))
+  //         ) {
+  //           const chartData = JSON.parse(value).map((row: any) => ({
+  //             xAxis: row[0],
+  //             yAxis: row[1],
+  //           }));
+  //           return (
+  //             // <TimeSeriesCell value="" chartData={chartData as ChartData} />
+  //             <LineSeriesChart chartData={chartData as ChartData} />
+  //           );
+  //         }
+  //         return value;
+  //       },
+  //     })),
+  //   [columnsMetadata],
+  // );
 
   const { headerGroups, rows, prepareRow, getTableProps, getTableBodyProps } =
     useTable<DataType>(
@@ -361,9 +536,9 @@ export default function SupersetPluginChartImmersatable(
                 <TableRow {...row.getRowProps()} style={{ width: '100%' }}>
                   {row.cells.map(cell => (
                     <TableCell {...cell.getCellProps()}>
-                      <div style={{ padding: '0.475rem 1rem' }}>
-                        {cell.render('Cell')}
-                      </div>
+                      {/* <div style={{ padding: '0.475rem 1rem' }}> */}
+                      {cell.render('Cell')}
+                      {/* </div> */}
                     </TableCell>
                   ))}
                 </TableRow>
