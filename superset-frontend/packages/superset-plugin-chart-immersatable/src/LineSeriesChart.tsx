@@ -27,7 +27,7 @@ const accessors = {
 
 const ChartContainer = styled.div`
   rect {
-    height: 70px;
+    height: 90px;
     y: 10;
   }
   svg {
