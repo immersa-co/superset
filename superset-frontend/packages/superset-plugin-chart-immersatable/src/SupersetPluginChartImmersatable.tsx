@@ -1,6 +1,6 @@
 /* eslint-disable theme-colors/no-literal-colors */
 import React, { CSSProperties, createRef, useMemo, useCallback } from 'react';
-import { styled, DataRecordValue, t } from '@superset-ui/core';
+import { styled, DataRecordValue } from '@superset-ui/core';
 import {
   useTable,
   useSortBy,
@@ -15,16 +15,9 @@ import {
   SupersetPluginChartImmersatableProps,
   SupersetPluginChartImmersatableStylesProps,
 } from './types';
-// import { TimeSeriesCell } from './TimeSeries';
 import { LineSeriesChart } from './LineSeriesChart';
 import { DataColumnMeta } from './plugin/transformProps';
-import { checkChartData, formatColumnValue } from './utils';
-
-const ACTION_KEYS = {
-  enter: 'Enter',
-  spacebar: 'Spacebar',
-  space: ' ',
-};
+import { checkChartData, formatColumnValue, processCustomData } from './utils';
 
 const Styles = styled.div<SupersetPluginChartImmersatableStylesProps>`
   padding: ${({ theme }) => theme.gridUnit * 2}px;
@@ -85,21 +78,6 @@ const TableHeader = styled.div`
   min-height: 45px;
   &:hover {
     background-color: #fee9cd;
-    .resizer {
-      display: inline-block;
-      background: #fa8c16;
-      width: 7px;
-      height: 100%;
-      position: absolute;
-      right: 0;
-      top: 0;
-      transform: translateX(50%);
-      z-index: 1;
-      touch-action: none;
-    }
-    .isResizing {
-      background: #fa8c16;
-    }
   }
 `;
 
@@ -128,57 +106,11 @@ const TableCell = styled.div`
   position: relative;
   border: 1px solid #d1d5db;
   font-size: 0.875rem;
-  line-height: 1.25rem;
-  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;
+  min-height: 110px;
 `;
-
-interface CustomData {
-  [key: string]: any;
-}
-
-const filterDataByDateInterval = (
-  data: string,
-  startDate: Date,
-  endDate: Date,
-) =>
-  JSON.parse(data).filter((item: (string | number | Date)[]) => {
-    const itemDate = new Date(item[0]);
-    return itemDate >= startDate && itemDate <= endDate;
-  });
-
-const processCustomData = (
-  myData: CustomData[],
-  timeRangeCols: string[],
-  timeSinceUntil: {
-    startDate: Date;
-    endDate: Date;
-  },
-) => {
-  const { startDate, endDate } = timeSinceUntil;
-  return myData.map(customdata => {
-    const updatedCustomdata = { ...customdata };
-    const keysArray = Object.keys(updatedCustomdata);
-    // eslint-disable-next-line no-restricted-syntax
-    for (const item of keysArray) {
-      const value = updatedCustomdata[item];
-      if (
-        timeRangeCols.includes(item) &&
-        startDate &&
-        endDate &&
-        value?.toString().includes('[') &&
-        Array.isArray(JSON.parse(value))
-      ) {
-        const filteredData = filterDataByDateInterval(
-          value,
-          startDate,
-          endDate,
-        );
-        updatedCustomdata[item] = JSON.stringify(filteredData);
-      }
-    }
-    return updatedCustomdata;
-  });
-};
 
 export default function SupersetPluginChartImmersatable(
   props: SupersetPluginChartImmersatableProps,
@@ -191,7 +123,6 @@ export default function SupersetPluginChartImmersatable(
     timeSinceUntil,
     columns: columnsMeta,
     emitCrossFilters,
-    allowRearrangeColumns = false,
     filters,
   } = props;
 
@@ -231,21 +162,11 @@ export default function SupersetPluginChartImmersatable(
       const { truncateLongCells } = config;
 
       return {
-        id: String(i), // to allow duplicate column keys
-        // must use custom accessor to allow `.` in column names
-        // typing is incorrect in current version of `@types/react-table`
-        // so we ask TS not to check.
+        id: String(i),
         accessor: ((datum: { [x: string]: any }) => datum[key]) as never,
         Cell: ({ value }: { value: DataRecordValue }) => {
           const formattedColumnValue = formatColumnValue(column, value);
           const text = formattedColumnValue[1];
-          let backgroundColor;
-          const StyledCell = styled.td`
-            text-align: ${sharedStyle.textAlign};
-            white-space: ${value instanceof Date ? 'nowrap' : undefined};
-            position: relative;
-            background: ${backgroundColor || undefined};
-          `;
 
           const cellProps = {
             // show raw number in title in case of numeric values
@@ -264,19 +185,24 @@ export default function SupersetPluginChartImmersatable(
               yAxis: row[1],
             }));
             return (
-              <LineSeriesChart chartData={chartData as ChartData} />
-              // <StyledCell
-              //   {...cellProps}
-              //   style={{ minWidth: '200px', padding: '0.2rem 0.4rem' }}
-              // >
-              //   <LineSeriesChart chartData={chartData as ChartData} />
-              // </StyledCell>
+              <div
+                {...cellProps}
+                style={{
+                  width: columnWidth || '200px',
+                  ...sharedStyle,
+                }}
+              >
+                <LineSeriesChart chartData={chartData as ChartData} />
+              </div>
             );
           }
           return (
-            <StyledCell
+            <div
               {...cellProps}
-              style={{ width: '200px', padding: '1.2rem 2rem' }}
+              style={{
+                width: columnWidth || '200px',
+                ...sharedStyle,
+              }}
             >
               {truncateLongCells ? (
                 <div
@@ -288,64 +214,20 @@ export default function SupersetPluginChartImmersatable(
               ) : (
                 text
               )}
-            </StyledCell>
+            </div>
           );
         },
 
-        Header: ({ column: col, onClick, style, onDragStart, onDrop }) => (
-          <th
-            title={t('Shift + Click to sort by multiple columns')}
-            className={[className, col.isSorted ? 'is-sorted' : ''].join(' ')}
-            style={{
-              ...sharedStyle,
-              ...style,
-            }}
-            tabIndex={0}
-            onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
-              // programatically sort column on keypress
-              if (Object.values(ACTION_KEYS).includes(e.key)) {
-                col.toggleSortBy();
-              }
-            }}
-            onClick={onClick}
-            data-column-name={col.id}
-            {...(allowRearrangeColumns && {
-              draggable: 'true',
-              onDragStart,
-              onDragOver: e => e.preventDefault(),
-              onDragEnter: e => e.preventDefault(),
-              onDrop,
-            })}
+        Header: ({ style }) => (
+          <div
+            style={{ width: columnWidth || '200px', ...sharedStyle, ...style }}
           >
-            {/* can't use `columnWidth &&` because it may also be zero */}
-            {config.columnWidth ? (
-              // column width hint
-              <div
-                style={{
-                  width: columnWidth,
-                  height: 0.01,
-                }}
-              />
-            ) : null}
-            <div
-              data-column-name={col.id}
-              css={{
-                display: 'inline-flex',
-                alignItems: 'flex-end',
-              }}
-            >
-              <span
-                data-column-name={col.id}
-                style={{ overflowWrap: 'anywhere' }}
-              >
-                {label}
-              </span>
-            </div>
-          </th>
+            {label}
+          </div>
         ),
       };
     },
-    [allowRearrangeColumns, emitCrossFilters, isActiveFilterValue],
+    [emitCrossFilters, isActiveFilterValue],
   );
 
   const columns = useMemo(
@@ -353,7 +235,7 @@ export default function SupersetPluginChartImmersatable(
     [columnsMeta, getColumnConfigs],
   );
 
-  const myData = useMemo(
+  const processedData = useMemo(
     () => processCustomData(data, timeRangeCols, timeSinceUntil),
     [data, timeSinceUntil, timeRangeCols],
   );
@@ -369,58 +251,11 @@ export default function SupersetPluginChartImmersatable(
     [],
   );
 
-  // const columnNames = useMemo(() => {
-  //   if (myData && myData.length > 0) {
-  //     return Object.keys(myData[0]);
-  //   }
-  //   return [];
-  // }, [myData]);
-
-  // const columnsMetadata = useMemo(
-  //   () =>
-  //     columnNames.map(metadata => ({
-  //       width: DEFAULT_COLUMN_MIN_WIDTH,
-  //       name: metadata,
-  //       label: metadata,
-  //       minWidth: null,
-  //       maxWidth: null,
-  //       sortable: true,
-  //       sortDescFirst: true,
-  //     })),
-  //   [columnNames],
-  // );
-
-  // const columns: Column<DataType>[] = useMemo(
-  //   () =>
-  //     columnsMetadata.map(columnMetadata => ({
-  //       Header: columnMetadata.label,
-  //       accessor: columnMetadata.name,
-  //       Cell: (info: any) => {
-  //         const { value } = info;
-  //         if (
-  //           value?.toString().includes('[') &&
-  //           Array.isArray(JSON.parse(value as string))
-  //         ) {
-  //           const chartData = JSON.parse(value).map((row: any) => ({
-  //             xAxis: row[0],
-  //             yAxis: row[1],
-  //           }));
-  //           return (
-  //             // <TimeSeriesCell value="" chartData={chartData as ChartData} />
-  //             <LineSeriesChart chartData={chartData as ChartData} />
-  //           );
-  //         }
-  //         return value;
-  //       },
-  //     })),
-  //   [columnsMetadata],
-  // );
-
   const { headerGroups, rows, prepareRow, getTableProps, getTableBodyProps } =
     useTable<DataType>(
       {
         columns,
-        data: myData,
+        data: processedData,
         defaultColumn,
       },
       useSortBy,
@@ -453,7 +288,7 @@ export default function SupersetPluginChartImmersatable(
                     style={{ display: 'flex' }}
                   >
                     <TableColumn>
-                      <TableColumnText {...column.getHeaderProps()}>
+                      <TableColumnText style={{ width: '100%' }}>
                         {column.render('Header')}
                       </TableColumnText>
                       <span>
@@ -508,12 +343,6 @@ export default function SupersetPluginChartImmersatable(
                       </span>
                     </TableColumn>
                   </div>
-                  <div
-                    {...column.getResizerProps()}
-                    className={`resizer ${
-                      column.isResizing ? 'isResizing' : ''
-                    }`}
-                  />
                 </TableHeader>
               ))}
             </TableHeaderGroup>
@@ -521,24 +350,22 @@ export default function SupersetPluginChartImmersatable(
         </div>
         <div {...getTableBodyProps()}>
           <List
-            height={height - 50}
+            height={height}
             itemCount={rows.length}
-            itemSize={40}
+            itemSize={110}
             width="100%"
           >
-            {({ index }) => {
+            {({ index, style }) => {
               const row = rows[index];
               prepareRow(row);
               return (
-                <TableRow {...row.getRowProps()} style={{ width: '100%' }}>
-                  {row.cells.map(cell => (
-                    <TableCell {...cell.getCellProps()}>
-                      {/* <div style={{ padding: '0.475rem 1rem' }}> */}
-                      {cell.render('Cell')}
-                      {/* </div> */}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                <div style={style}>
+                  <TableRow {...row.getRowProps()} style={{ width: '100%' }}>
+                    {row.cells.map(cell => (
+                      <TableCell>{cell.render('Cell')}</TableCell>
+                    ))}
+                  </TableRow>
+                </div>
               );
             }}
           </List>
