@@ -1,31 +1,9 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
 import {
   ChartProps,
   extractTimegrain,
   getMetricLabel,
-  TimeFormatter,
   GenericDataType,
-  NumberFormatter,
   CurrencyFormatter,
-  DataRecordValue,
-  Currency,
   DataRecord,
   smartDateFormatter,
   getTimeFormatterForGranularity,
@@ -41,43 +19,11 @@ import {
   NumberFormats,
 } from '@superset-ui/core';
 import memoizeOne from 'memoize-one';
-import { DataType } from '../types';
+import { DataColumnMeta, DataType, TableColumnConfig } from '../types';
 import { getSinceUntil } from '../utils';
 
 const { PERCENT_3_POINT } = NumberFormats;
 const { DATABASE_DATETIME } = TimeFormats;
-
-type CustomFormatter = (value: DataRecordValue) => string;
-
-export type TableColumnConfig = {
-  d3NumberFormat?: string;
-  d3SmallNumberFormat?: string;
-  d3TimeFormat?: string;
-  columnWidth?: number;
-  horizontalAlign?: 'left' | 'right' | 'center';
-  showCellBars?: boolean;
-  alignPositiveNegative?: boolean;
-  colorPositiveNegative?: boolean;
-  truncateLongCells?: boolean;
-  currencyFormat?: Currency;
-};
-
-export interface DataColumnMeta {
-  // `key` is what is called `label` in the input props
-  key: string;
-  // `label` is verbose column name used for rendering
-  label: string;
-  dataType: GenericDataType;
-  formatter?:
-    | TimeFormatter
-    | NumberFormatter
-    | CustomFormatter
-    | CurrencyFormatter;
-  isMetric?: boolean;
-  isPercentMetric?: boolean;
-  isNumeric?: boolean;
-  config?: TableColumnConfig;
-}
 
 export type TableChartFormData = QueryFormData & {
   align_pn?: boolean;

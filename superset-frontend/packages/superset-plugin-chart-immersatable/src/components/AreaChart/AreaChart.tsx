@@ -1,5 +1,4 @@
 /* eslint-disable theme-colors/no-literal-colors */
-/* eslint-disable react/jsx-props-no-spreading */
 import React, { ComponentProps, ComponentType, memo, useMemo } from 'react';
 import { scaleLinear, scaleTime } from '@visx/scale';
 import { extent as d3Extent, max as d3Max } from 'd3-array';
@@ -9,19 +8,19 @@ import {
   useTooltipInPortal,
   Tooltip,
 } from '@visx/tooltip';
-import { timeFormat } from '@visx/vendor/d3-time-format';
 import { ParentSize } from '@visx/responsive';
-import { AreaChart } from './AreaChart';
-import { ChartData, ChartDataItem } from './types';
-import { toStandardAmount } from './utils';
+import { ChartData, ChartDataItem } from '../../types';
+import { toStandardAmount } from '../../utils';
+import { AreaChartContent } from './AreaChartContent';
 
 import { TinyTooltip } from './TinyTooltip';
+import { TooltipContent } from '../LineSeriesChart';
 
 const trendingUpColor = '#65a30d';
 
 const trendingDownColor = '#f43f5e';
 
-export interface ICohortInlineTrackChartProps {
+export interface IAreaChartProps {
   data: ChartData;
   height: number;
   width: number;
@@ -40,8 +39,6 @@ const formatValue = (datum: ChartDataItem) => toStandardAmount(datum.yAxis);
 
 const getDate = (datum: ChartDataItem) => new Date(datum.xAxis);
 
-const formatDate = timeFormat("%b %d, '%y");
-
 export const withResponsive =
   (Component: ComponentType<any>) => (props: ComponentProps<any>) =>
     (
@@ -52,8 +49,8 @@ export const withResponsive =
       </ParentSize>
     );
 
-const InlineTrackChart = withResponsive(
-  ({ data, height, width }: ICohortInlineTrackChartProps) => {
+const InlineAreaChart = withResponsive(
+  ({ data, height, width }: IAreaChartProps) => {
     const margin = {
       top: 0,
       left: 0,
@@ -106,21 +103,19 @@ const InlineTrackChart = withResponsive(
 
     return (
       <div style={{ width: '100%', height: '100%' }} ref={containerRef}>
-        <svg width={width} height={25}>
-          <AreaChart
+        <svg width={width} height={height}>
+          <AreaChartContent
             id={Math.random().toString(36)}
             data={data}
             dataType="date"
             xField="xAxis"
             yField="yAxis"
             gradientColor={accentColor}
-            fromOpacity={0.5}
-            toOpacity={0.05}
+            fromOpacity={1}
+            toOpacity={0.3}
             width={width}
             height={height}
             margin={margin}
-            hideBottomAxis
-            hideLeftAxis
           />
           <TinyTooltip
             margin={margin}
@@ -153,10 +148,11 @@ const InlineTrackChart = withResponsive(
               zIndex: 9999,
             }}
           >
-            {formatDate(getDate(tooltipData))}
-            <div style={{ paddingTop: '7px', fontWeight: '600' }}>
-              {formatValue(tooltipData)}
-            </div>
+            <TooltipContent
+              accentColor={accentColor}
+              datum={tooltipData as ChartDataItem}
+              yAxisValue={formatValue(tooltipData)}
+            />
           </Tooltip>
         )}
       </div>
@@ -164,4 +160,4 @@ const InlineTrackChart = withResponsive(
   },
 );
 
-export const CohortInlineTrackChart = memo(InlineTrackChart);
+export const AreaChart = memo(InlineAreaChart);

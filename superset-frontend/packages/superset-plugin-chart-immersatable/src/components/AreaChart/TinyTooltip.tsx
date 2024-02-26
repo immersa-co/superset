@@ -4,7 +4,7 @@ import { bisector } from 'd3-array';
 import { localPoint } from '@visx/event';
 import { Bar, Line } from '@visx/shape';
 
-import { ChartDataItem, ChartMargin } from './types';
+import { ChartDataItem, ChartMargin } from '../../types';
 
 export type TinyTooltipProps = {
   hideTooltip: () => void;

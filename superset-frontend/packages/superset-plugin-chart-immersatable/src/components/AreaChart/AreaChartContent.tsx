@@ -1,37 +1,35 @@
 import React, { useMemo } from 'react';
 import { Group } from '@visx/group';
 import { AreaClosed } from '@visx/shape';
-import { AxisLeft, AxisBottom } from '@visx/axis';
 import { LinearGradient } from '@visx/gradient';
 import { curveMonotoneX } from '@visx/curve';
 
-import { ChartData, ChartMargin, ChartDataType, ChartDataItem } from './types';
-import { useChartAccessorsAndScales } from './hooks';
 import {
-  ChartBottomAxisBaseConfig,
-  ChartLeftAxisBaseConfig,
-  formatDateForChart,
-} from './utils';
+  ChartData,
+  ChartMargin,
+  ChartDataType,
+  ChartDataItem,
+} from '../../types';
+import { useChartAccessorsAndScales } from '../../hooks';
 
-export interface IAreaChartProps {
+export interface IAreaChartContentProps {
   id: string;
   data: ChartData;
   dataType?: ChartDataType;
   xField: string;
   yField: string;
   gradientColor: string;
+  gradientColorTo?: string;
   fromOpacity?: number;
   toOpacity?: number;
   width: number;
   height: number;
   margin: ChartMargin;
-  hideBottomAxis?: boolean;
-  hideLeftAxis?: boolean;
   top?: number;
   left?: number;
 }
 
-export const AreaChart = ({
+export const AreaChartContent = ({
   id,
   data,
   dataType = 'string',
@@ -41,13 +39,12 @@ export const AreaChart = ({
   xField,
   yField,
   margin,
-  hideBottomAxis = false,
-  hideLeftAxis = false,
+  gradientColorTo,
   fromOpacity = 1,
   toOpacity = 0.1,
   top,
   left,
-}: IAreaChartProps) => {
+}: IAreaChartContentProps) => {
   const bounds = useMemo(() => {
     const innerHeight = height - margin.top - margin.bottom;
     const innerWidth = width - margin.left - margin.right;
@@ -80,7 +77,7 @@ export const AreaChart = ({
         id={`${id}-chart-gradient`}
         from={gradientColor}
         fromOpacity={fromOpacity}
-        to={gradientColor}
+        to={gradientColorTo || gradientColor}
         toOpacity={toOpacity}
       />
 
@@ -96,26 +93,6 @@ export const AreaChart = ({
         fill={`url(#${id}-chart-gradient)`}
         curve={curveMonotoneX}
       />
-
-      {!hideBottomAxis && (
-        <AxisBottom
-          top={bounds.yMax}
-          scale={xScale as never}
-          numTicks={width > 520 ? 10 : 5}
-          tickFormat={
-            dataType === 'date' ? (formatDateForChart as never) : undefined
-          }
-          {...ChartBottomAxisBaseConfig}
-        />
-      )}
-
-      {!hideLeftAxis && (
-        <AxisLeft
-          scale={yScale as never}
-          numTicks={5}
-          {...ChartLeftAxisBaseConfig}
-        />
-      )}
     </Group>
   );
 };

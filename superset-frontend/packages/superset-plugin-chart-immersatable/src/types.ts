@@ -20,8 +20,14 @@ import {
   QueryFormData,
   supersetTheme,
   DataRecordFilters,
+  DataRecordValue,
+  GenericDataType,
+  TimeFormatter,
+  NumberFormatter,
+  CurrencyFormatter,
+  Currency,
 } from '@superset-ui/core';
-import { DataColumnMeta } from './plugin/transformProps';
+import { ScaleOrdinal } from 'd3-scale';
 
 export interface SupersetPluginChartImmersatableStylesProps {
   height: number;
@@ -37,6 +43,35 @@ interface SupersetPluginChartHelloWorldCustomizeProps {
 export type SupersetPluginChartHelloWorldQueryFormData = QueryFormData &
   SupersetPluginChartImmersatableStylesProps &
   SupersetPluginChartHelloWorldCustomizeProps;
+
+type CustomFormatter = (value: DataRecordValue) => string;
+
+export type TableColumnConfig = {
+  d3NumberFormat?: string;
+  d3SmallNumberFormat?: string;
+  d3TimeFormat?: string;
+  columnWidth?: number;
+  horizontalAlign?: 'left' | 'right' | 'center';
+  showCellBars?: boolean;
+  alignPositiveNegative?: boolean;
+  colorPositiveNegative?: boolean;
+  truncateLongCells?: boolean;
+  currencyFormat?: Currency;
+};
+export interface DataColumnMeta {
+  key: string;
+  label: string;
+  dataType: GenericDataType;
+  formatter?:
+    | TimeFormatter
+    | NumberFormatter
+    | CustomFormatter
+    | CurrencyFormatter;
+  isMetric?: boolean;
+  isPercentMetric?: boolean;
+  isNumeric?: boolean;
+  config?: TableColumnConfig;
+}
 
 export type SupersetPluginChartImmersatableProps =
   SupersetPluginChartImmersatableStylesProps &
@@ -74,6 +109,7 @@ export type ColorsVariants = {
 };
 
 export type ChartData = ChartDataItem[];
+
 export type ChartMargin = {
   top: number;
   right: number;
@@ -83,3 +119,9 @@ export type ChartMargin = {
 export type ChartDataType = 'date' | 'string' | 'number';
 
 export type DataType = Record<string, unknown>;
+
+export type ChartSeriesData = {
+  xAxis: string;
+  labels?: { [serieKey: string]: string };
+  colorScale?: ScaleOrdinal<string, ColorsVariants | string>;
+} & { [serieKey: string]: number | string };
