@@ -3,7 +3,6 @@ import { ScaleLinear, ScaleTime } from 'd3-scale';
 import { bisector } from 'd3-array';
 import { localPoint } from '@visx/event';
 import { Bar, Line } from '@visx/shape';
-
 import { ChartDataItem, ChartMargin } from '../../types';
 
 export type TinyTooltipProps = {
@@ -63,7 +62,6 @@ export const TinyTooltip = ({
             ? dataIndex1
             : dataIndex0;
       }
-
       showTooltip({
         tooltipData: updatedTooltipData,
         tooltipLeft: xPoint,
@@ -72,13 +70,13 @@ export const TinyTooltip = ({
     },
     [xScale, bisectDate, data, getDate, showTooltip, yScale, getValue],
   );
+
   return (
     // eslint-disable-next-line react/jsx-no-useless-fragment
     <>
       <Bar
-        x={margin.left}
         y={margin.top}
-        width={innerWidth}
+        width={innerWidth + margin.left}
         height={innerHeight}
         fill="transparent"
         rx={14}
@@ -93,8 +91,9 @@ export const TinyTooltip = ({
             from={{ x: tooltipLeft, y: margin.top }}
             to={{ x: tooltipLeft, y: innerHeight + margin.top }}
             stroke={accentColor}
-            strokeWidth={1}
+            strokeWidth={2}
             pointerEvents="none"
+            strokeDasharray="5,2"
           />
           <circle
             cx={tooltipLeft}

@@ -1,98 +1,51 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Group } from '@visx/group';
 import { AreaClosed } from '@visx/shape';
 import { LinearGradient } from '@visx/gradient';
 import { curveMonotoneX } from '@visx/curve';
+import { ScaleLinear, ScaleTime } from 'd3-scale';
+import { ChartData, ChartMargin, ChartDataItem } from '../../types';
 
-import {
-  ChartData,
-  ChartMargin,
-  ChartDataType,
-  ChartDataItem,
-} from '../../types';
-import { useChartAccessorsAndScales } from '../../hooks';
-
-export interface IAreaChartContentProps {
+export type IAreaChartProps = {
   id: string;
   data: ChartData;
-  dataType?: ChartDataType;
-  xField: string;
-  yField: string;
+  xScale: ScaleTime<number, number>;
+  yScale: ScaleLinear<number, number>;
   gradientColor: string;
-  gradientColorTo?: string;
-  fromOpacity?: number;
-  toOpacity?: number;
-  width: number;
-  height: number;
   margin: ChartMargin;
-  top?: number;
-  left?: number;
-}
+  getDate: (datum: ChartDataItem) => Date;
+  getValue: (datum: ChartDataItem) => number;
+};
 
 export const AreaChartContent = ({
   id,
-  data,
-  dataType = 'string',
   gradientColor,
-  width,
-  height,
-  xField,
-  yField,
   margin,
-  gradientColorTo,
-  fromOpacity = 1,
-  toOpacity = 0.1,
-  top,
-  left,
-}: IAreaChartContentProps) => {
-  const bounds = useMemo(() => {
-    const innerHeight = height - margin.top - margin.bottom;
-    const innerWidth = width - margin.left - margin.right;
-    const chartHeight = innerHeight;
-
-    const xMax = Math.max(innerWidth, 0);
-    const yMax = Math.max(chartHeight, 0);
-
-    return {
-      xMax,
-      yMax,
-    };
-  }, [height, margin, width]);
-
-  const { getXAxisValue, getYAxisValue, xScale, yScale } =
-    useChartAccessorsAndScales({
-      data,
-      dataType,
-      xField,
-      yField,
-      width: bounds.xMax,
-      height: bounds.yMax,
-    });
-
-  if (width < 10) return null;
-
-  return (
-    <Group left={left || margin.left} top={top || margin.top}>
-      <LinearGradient
-        id={`${id}-chart-gradient`}
-        from={gradientColor}
-        fromOpacity={fromOpacity}
-        to={gradientColorTo || gradientColor}
-        toOpacity={toOpacity}
-      />
-
-      <AreaClosed<ChartDataItem>
-        data={data}
-        x={datum =>
-          (xScale as (arg: string | Date) => number)(getXAxisValue(datum)) || 0
-        }
-        y={datum => yScale?.(getYAxisValue(datum)) || 0}
-        yScale={yScale as never}
-        strokeWidth={1}
-        stroke={`url(#${id}-chart-gradient)`}
-        fill={`url(#${id}-chart-gradient)`}
-        curve={curveMonotoneX}
-      />
-    </Group>
-  );
-};
+  data,
+  xScale,
+  yScale,
+  getDate,
+  getValue,
+}: IAreaChartProps) => (
+  <Group left={margin.left}>
+    <LinearGradient
+      id={`${id}-chart-gradient`}
+      from={gradientColor}
+      to={gradientColor}
+      fromOpacity={1}
+      toOpacity={0.3}
+    />
+    <AreaClosed<ChartDataItem>
+      data={data}
+      x={datum =>
+        (xScale as (arg: string | Date) => number)(getDate(datum)) ?? 0
+      }
+      y={datum => yScale?.(getValue(datum)) ?? 0}
+      yScale={yScale as never}
+      strokeWidth={1}
+      stroke={`url(#${id}-chart-gradient)`}
+      fill={`url(#${id}-chart-gradient)`}
+      curve={curveMonotoneX}
+    />
+  </Group>
+);

@@ -45,5 +45,5 @@ export const TableCell = styled.div`
   display: flex;
   align-items: center;
   padding-left: 1rem;
-  min-height: 110px;
+  min-height: 70px;
 `;

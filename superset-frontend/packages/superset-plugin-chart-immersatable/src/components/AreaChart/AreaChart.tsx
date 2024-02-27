@@ -1,30 +1,26 @@
 /* eslint-disable theme-colors/no-literal-colors */
-import React, { ComponentProps, ComponentType, memo, useMemo } from 'react';
-import { scaleLinear, scaleTime } from '@visx/scale';
-import { extent as d3Extent, max as d3Max } from 'd3-array';
-import {
-  useTooltip,
-  defaultStyles,
-  useTooltipInPortal,
-  Tooltip,
-} from '@visx/tooltip';
+import React, { useMemo, ComponentType, ComponentProps, memo } from 'react';
+import { scaleTime, scaleLinear } from '@visx/scale';
+import { withTooltip, TooltipWithBounds, defaultStyles } from '@visx/tooltip';
+import { WithTooltipProvidedProps } from '@visx/tooltip/lib/enhancers/withTooltip';
+import { extent } from 'd3-array';
 import { ParentSize } from '@visx/responsive';
-import { ChartData, ChartDataItem } from '../../types';
-import { toStandardAmount } from '../../utils';
+import { TooltipContent } from '../LineSeriesChart/TooltipContent';
 import { AreaChartContent } from './AreaChartContent';
-
 import { TinyTooltip } from './TinyTooltip';
-import { TooltipContent } from '../LineSeriesChart';
+import { ChartData, ChartDataItem } from '../../types';
+
+type TooltipData = ChartDataItem;
 
 const trendingUpColor = '#65a30d';
-
 const trendingDownColor = '#f43f5e';
 
-export interface IAreaChartProps {
-  data: ChartData;
-  height: number;
-  width: number;
-}
+const tooltipStyles = {
+  ...defaultStyles,
+  background: '#F8F8FF',
+  border: '1px solid white',
+  zIndex: 10,
+};
 
 const isUpwardTrend = (dataPoints: number[]) => {
   if (dataPoints.length < 2) return false;
@@ -33,10 +29,14 @@ const isUpwardTrend = (dataPoints: number[]) => {
   return last >= first;
 };
 
+export type IAreaChartProps = {
+  width: number;
+  height: number;
+  chartData: ChartData;
+  margin?: { top: number; right: number; bottom: number; left: number };
+};
+
 const getValue = (datum: ChartDataItem) => datum.yAxis;
-
-const formatValue = (datum: ChartDataItem) => toStandardAmount(datum.yAxis);
-
 const getDate = (datum: ChartDataItem) => new Date(datum.xAxis);
 
 export const withResponsive =
@@ -50,114 +50,109 @@ export const withResponsive =
     );
 
 const InlineAreaChart = withResponsive(
-  ({ data, height, width }: IAreaChartProps) => {
-    const margin = {
-      top: 0,
-      left: 0,
-      bottom: 0,
-      right: 0,
-    };
-
-    const { containerRef } = useTooltipInPortal({
-      scroll: true,
-    });
-
-    const xMax = Math.max(width, 0);
-
-    const yMax = Math.max(height, 0);
-
-    const isTrendingUp = isUpwardTrend(data.map(item => item.yAxis));
-
-    const accentColor = isTrendingUp ? trendingUpColor : trendingDownColor;
-
-    const innerHeight = height - margin.top - margin.bottom;
-
-    const yScale = useMemo(
-      () =>
-        scaleLinear({
-          range: [yMax, 0],
-          domain: [0, d3Max(data, getValue) || 0],
-          nice: true,
-        }),
-      [data, yMax],
-    );
-
-    const xScale = useMemo(
-      () =>
-        scaleTime({
-          range: [0, xMax],
-          domain: d3Extent(data, getDate) as unknown as [Date, Date],
-        }),
-      [data, xMax],
-    );
-
-    const {
-      hideTooltip,
+  withTooltip<IAreaChartProps, TooltipData>(
+    ({
+      chartData,
+      width,
+      height,
+      margin = { top: 0, left: 0, right: 0, bottom: 0 },
       showTooltip,
-      tooltipLeft = 0,
-      tooltipTop = 0,
+      hideTooltip,
       tooltipData,
-    } = useTooltip<ChartDataItem>();
+      tooltipTop = 0,
+      tooltipLeft = 0,
+    }: IAreaChartProps & WithTooltipProvidedProps<TooltipData>) => {
+      if (width < 10) return null;
 
-    if (!data.length) return <span>-</span>;
+      const xMax = Math.max(width, 0);
 
-    return (
-      <div style={{ width: '100%', height: '100%' }} ref={containerRef}>
-        <svg width={width} height={height}>
-          <AreaChartContent
-            id={Math.random().toString(36)}
-            data={data}
-            dataType="date"
-            xField="xAxis"
-            yField="yAxis"
-            gradientColor={accentColor}
-            fromOpacity={1}
-            toOpacity={0.3}
-            width={width}
-            height={height}
-            margin={margin}
-          />
-          <TinyTooltip
-            margin={margin}
-            innerWidth={width}
-            innerHeight={height}
-            tooltipLeft={tooltipLeft}
-            tooltipTop={tooltipTop}
-            tooltipData={tooltipData as ChartDataItem}
-            hideTooltip={hideTooltip}
-            showTooltip={showTooltip}
-            xScale={xScale}
-            yScale={yScale}
-            getDate={getDate}
-            getValue={getValue}
-            accentColor={accentColor}
-            data={data}
-          />
-        </svg>
+      const yMax = Math.max(height, 0);
 
-        {tooltipData && (
-          <Tooltip
-            top={innerHeight + margin.top - 14}
-            left={tooltipLeft}
-            style={{
-              ...defaultStyles,
-              minWidth: 72,
-              textAlign: 'center',
-              transform: 'translateX(-50%)',
-              border: '1px solid #808080',
-              zIndex: 9999,
-            }}
-          >
-            <TooltipContent
-              accentColor={accentColor}
-              datum={tooltipData as ChartDataItem}
-              yAxisValue={formatValue(tooltipData)}
+      const maxYValue = useMemo(() => {
+        const allYValues = chartData.reduce((accumulator, datum) => {
+          accumulator.push(datum.yAxis);
+          return accumulator;
+        }, [] as number[]);
+
+        return Math.max(...allYValues);
+      }, [chartData]);
+
+      const isTrendingUp = isUpwardTrend(
+        chartData.map(item => Number(item.yAxis)),
+      );
+
+      const accentColor = isTrendingUp ? trendingUpColor : trendingDownColor;
+
+      const yScale = useMemo(
+        () =>
+          scaleLinear({
+            range: [yMax, 0],
+            domain: [0, maxYValue],
+            nice: true,
+          }),
+        [yMax, maxYValue],
+      );
+
+      const xScale = useMemo(
+        () =>
+          scaleTime({
+            range: [0, xMax],
+            domain: extent(chartData, getDate) as [Date, Date],
+          }),
+        [chartData, xMax],
+      );
+
+      return (
+        <div>
+          <svg width={width} height={height}>
+            <AreaChartContent
+              id={Math.random().toString(36)}
+              data={chartData}
+              margin={margin}
+              xScale={xScale}
+              yScale={yScale}
+              gradientColor={accentColor}
+              getDate={getDate}
+              getValue={getValue}
             />
-          </Tooltip>
-        )}
-      </div>
-    );
-  },
+            <TinyTooltip
+              margin={margin}
+              innerWidth={width}
+              innerHeight={height}
+              tooltipLeft={tooltipLeft}
+              tooltipTop={tooltipTop}
+              tooltipData={tooltipData as ChartDataItem}
+              hideTooltip={hideTooltip}
+              showTooltip={showTooltip}
+              xScale={xScale}
+              yScale={yScale}
+              getDate={getDate}
+              getValue={getValue}
+              accentColor={accentColor}
+              data={chartData}
+            />
+          </svg>
+
+          {tooltipData && (
+            <div>
+              <TooltipWithBounds
+                key={Math.random()}
+                top={tooltipTop - 12}
+                left={tooltipLeft + 12 + margin.left}
+                style={tooltipStyles}
+              >
+                <TooltipContent
+                  accentColor={accentColor}
+                  datum={tooltipData as ChartDataItem}
+                  yAxisValue={getValue(tooltipData)}
+                />
+              </TooltipWithBounds>
+            </div>
+          )}
+        </div>
+      );
+    },
+  ),
 );
 
 export const AreaChart = memo(InlineAreaChart);

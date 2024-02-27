@@ -1,11 +1,11 @@
 /* eslint-disable theme-colors/no-literal-colors */
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { AnimatedLineSeries, XYChart, Tooltip } from '@visx/xychart';
 import { defaultStyles } from '@visx/tooltip';
-import { styled } from '@superset-ui/core';
 import { curveLinear } from '@visx/curve';
 import { ChartData, ChartDataItem, ChartSeriesData } from '../../types';
 import { TooltipContent } from './TooltipContent';
+import { ChartContainer } from './ChartStyles';
 
 const trendingUpColor = '#65a30d';
 
@@ -22,22 +22,11 @@ const accessors = {
   yAccessor: (datum: ChartDataItem) => datum.yAxis,
 };
 
-export interface ILineSeriesChartProps {
+export type ILineSeriesChartProps = {
   chartData: ChartData;
   height: number;
   margin?: { top: number; right: number; bottom: number; left: number };
-}
-
-const ChartContainer = styled.div`
-  rect {
-    height: 70px;
-    y: 10;
-  }
-  svg {
-    display: flex;
-    align-items: center;
-  }
-`;
+};
 
 export const LineSeriesChart = memo(
   ({
@@ -45,7 +34,20 @@ export const LineSeriesChart = memo(
     height,
     margin = { top: 50, left: 5, right: 5, bottom: 50 },
   }: ILineSeriesChartProps) => {
-    const isTrendingUp = isUpwardTrend(chartData.map(item => item.yAxis));
+    const yMax = Math.max(height, 0);
+
+    const maxYValue = useMemo(() => {
+      const allYValues = chartData.reduce((accumulator, datum) => {
+        accumulator.push(datum.yAxis);
+        return accumulator;
+      }, [] as number[]);
+
+      return Math.max(...allYValues);
+    }, [chartData]);
+
+    const isTrendingUp = isUpwardTrend(
+      chartData.map(item => Number(item.yAxis)),
+    );
     const accentColor = isTrendingUp ? trendingUpColor : trendingDownColor;
     return (
       <ChartContainer>
@@ -53,7 +55,11 @@ export const LineSeriesChart = memo(
           margin={margin}
           height={height}
           xScale={{ type: 'band' }}
-          yScale={{ type: 'linear' }}
+          yScale={{
+            type: 'linear',
+            range: [yMax, 0],
+            domain: [0, maxYValue + 20],
+          }}
         >
           <AnimatedLineSeries
             dataKey="Line 1"

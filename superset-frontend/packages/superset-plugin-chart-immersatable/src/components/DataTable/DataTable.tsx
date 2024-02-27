@@ -96,7 +96,7 @@ export const DataTable = ({
         <List
           height={height}
           itemCount={rows.length}
-          itemSize={110}
+          itemSize={70}
           width={DEFAULT_WIDTH}
         >
           {({ index, style }) => {

@@ -8,11 +8,13 @@ import {
   DataColumnMeta,
 } from './types';
 import { DataTable, LineSeriesChart } from './components';
-import { checkChartData } from './utils/checkChartData';
-import { formatColumnValue } from './utils/formatColumnValue';
-import { processCustomData } from './utils/processCustomData';
-import { ContainerStyle, HeaderText, Styles } from './styledComponent';
-import { getSharedStyle } from './utils/getSharedStyle';
+import { ContainerStyle, HeaderText, Styles } from './Styles';
+import {
+  checkChartData,
+  formatColumnValue,
+  getSharedStyle,
+  processCustomData,
+} from './utils';
 
 const DEFAULT_WIDTH = '200px';
 
@@ -85,7 +87,7 @@ export default function SupersetPluginChartImmersatable(
               <div {...cellProps} style={commonStyle}>
                 <LineSeriesChart
                   chartData={chartData as ChartData}
-                  height={102}
+                  height={50}
                 />
               </div>
             );

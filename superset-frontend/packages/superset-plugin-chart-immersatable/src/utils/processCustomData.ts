@@ -1,6 +1,6 @@
-interface CustomData {
+type CustomData = {
   [key: string]: any;
-}
+};
 
 const filterDataByDateInterval = (
   data: string,
