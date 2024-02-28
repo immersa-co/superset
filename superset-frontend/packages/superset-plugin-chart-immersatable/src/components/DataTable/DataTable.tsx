@@ -4,17 +4,13 @@ import { ColumnWithLooseAccessor, useSortBy, useTable } from 'react-table';
 import { FixedSizeList as List } from 'react-window';
 import { FaSortDown as FaSortDesc } from '@react-icons/all-files/fa/FaSortDown';
 import { FaSortUp as FaSortAsc } from '@react-icons/all-files/fa/FaSortUp';
+import { TableStyles } from './table-styles';
+import { TableHeaderIcon } from './TableHeaderIcon';
 import { DataType } from '../../types';
-import {
-  TableCell,
-  TableColumn,
-  TableColumnText,
-  TableHeader,
-  TableHeaderGroup,
-  TableRow,
-} from './styledTable';
 
 const DEFAULT_WIDTH = '100%';
+
+const defaultWidthStyle = { width: DEFAULT_WIDTH };
 
 export const DataTable = ({
   columns,
@@ -40,56 +36,39 @@ export const DataTable = ({
     <>
       <div {...getTableProps()}>
         {headerGroups.map(headerGroup => (
-          <TableHeaderGroup
+          <TableStyles.HeaderGroup
             {...headerGroup.getHeaderGroupProps()}
             key={headerGroup.id}
-            style={{ width: DEFAULT_WIDTH }}
+            style={defaultWidthStyle}
           >
             {headerGroup.headers.map(column => (
-              <TableHeader key={column.id}>
-                <div
-                  {...column.getHeaderProps(column.getSortByToggleProps())}
-                  style={{ display: 'flex' }}
-                >
-                  <TableColumn>
-                    <TableColumnText style={{ width: DEFAULT_WIDTH }}>
+              <TableStyles.Header key={column.id}>
+                <div {...column.getHeaderProps(column.getSortByToggleProps())}>
+                  <TableStyles.Column>
+                    <TableStyles.ColumnContent style={defaultWidthStyle}>
                       {column.render('Header')}
-                    </TableColumnText>
+                    </TableStyles.ColumnContent>
                     <span>
-                      <div
-                        style={{
-                          display: 'flex',
-                          position: 'relative',
-                        }}
-                      >
-                        <FaSortAsc
-                          style={{
-                            height: '1.35rem',
-                            width: '1.35rem',
-                            color:
-                              column.isSorted && !column.isSortedDesc
-                                ? 'orange'
-                                : 'gray',
-                          }}
+                      <TableStyles.Icon>
+                        <TableHeaderIcon
+                          Icon={FaSortAsc}
+                          isActive={column.isSorted && !column.isSortedDesc}
+                          isAbsolute={false}
                         />
-                        <FaSortDesc
-                          style={{
-                            height: '1.35rem',
-                            width: '1.35rem',
-                            color:
-                              column.isSorted && column.isSortedDesc
-                                ? 'orange'
-                                : 'gray',
-                            position: 'absolute',
-                          }}
+                        <TableHeaderIcon
+                          Icon={FaSortDesc}
+                          isActive={
+                            (column.isSorted && column.isSortedDesc) || false
+                          }
+                          isAbsolute
                         />
-                      </div>
+                      </TableStyles.Icon>
                     </span>
-                  </TableColumn>
+                  </TableStyles.Column>
                 </div>
-              </TableHeader>
+              </TableStyles.Header>
             ))}
-          </TableHeaderGroup>
+          </TableStyles.HeaderGroup>
         ))}
       </div>
       <div {...getTableBodyProps()}>
@@ -104,14 +83,14 @@ export const DataTable = ({
             prepareRow(row);
             return (
               <div style={style}>
-                <TableRow
+                <TableStyles.Row
                   {...row.getRowProps()}
-                  style={{ width: DEFAULT_WIDTH }}
+                  style={defaultWidthStyle}
                 >
                   {row.cells.map(cell => (
-                    <TableCell>{cell.render('Cell')}</TableCell>
+                    <TableStyles.Cell>{cell.render('Cell')}</TableStyles.Cell>
                   ))}
-                </TableRow>
+                </TableStyles.Row>
               </div>
             );
           }}

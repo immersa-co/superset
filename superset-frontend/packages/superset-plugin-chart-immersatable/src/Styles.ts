@@ -24,8 +24,11 @@ export const Styles = styled.div<SupersetPluginChartImmersatableStylesProps>`
   }
 `;
 
-export const ContainerStyle = styled.div`
+const baseStyle = styled.div`
   border: 1px solid #d1d5db;
+`;
+
+export const ContainerStyled = styled(baseStyle)`
   border-radius: 1rem;
   margin: 10px;
   width: fit-content;
@@ -35,9 +38,8 @@ export const ContainerStyle = styled.div`
       0 8px 10px -6px rgb(0 0 0 / 0.1);
   }
 `;
-export const HeaderText = styled.div`
+export const HeaderStyled = styled(baseStyle)`
   padding: 17px 24px;
-  border: 1px solid #d1d5db;
   border-top-left-radius: 1rem;
   border-top-right-radius: 1rem;
   background: #f3f4f6;

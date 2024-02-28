@@ -5,10 +5,10 @@ import { withTooltip, TooltipWithBounds, defaultStyles } from '@visx/tooltip';
 import { WithTooltipProvidedProps } from '@visx/tooltip/lib/enhancers/withTooltip';
 import { extent } from 'd3-array';
 import { ParentSize } from '@visx/responsive';
-import { TooltipContent } from '../LineSeriesChart/TooltipContent';
 import { AreaChartContent } from './AreaChartContent';
 import { TinyTooltip } from './TinyTooltip';
 import { ChartData, ChartDataItem } from '../../types';
+import { TooltipContent } from '../LineSeriesChart';
 
 type TooltipData = ChartDataItem;
 

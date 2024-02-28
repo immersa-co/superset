@@ -1,8 +1,8 @@
 /* eslint-disable theme-colors/no-literal-colors */
 import React, { memo } from 'react';
 import { timeFormat } from '@visx/vendor/d3-time-format';
-import { ChartDataItem } from '../../types';
 import { ColoredSquare, TooltipContainer } from './ChartStyles';
+import { ChartDataItem } from '../../types';
 
 const getDate = (datum: ChartDataItem) => new Date(datum.xAxis);
 

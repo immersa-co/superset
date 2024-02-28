@@ -3,13 +3,19 @@ import React, { memo, useMemo } from 'react';
 import { AnimatedLineSeries, XYChart, Tooltip } from '@visx/xychart';
 import { defaultStyles } from '@visx/tooltip';
 import { curveLinear } from '@visx/curve';
-import { ChartData, ChartDataItem, ChartSeriesData } from '../../types';
 import { TooltipContent } from './TooltipContent';
 import { ChartContainer } from './ChartStyles';
+import { ChartData, ChartDataItem, ChartSeriesData } from '../../types';
 
 const trendingUpColor = '#65a30d';
 
 const trendingDownColor = '#f43f5e';
+
+const tooltipStyles = {
+  ...defaultStyles,
+  textAlign: 'center' as const,
+  backgroundColor: '#F8F8FF' as const,
+};
 
 const isUpwardTrend = (dataPoints: number[]) => {
   if (dataPoints.length < 2) return false;
@@ -17,7 +23,7 @@ const isUpwardTrend = (dataPoints: number[]) => {
   return last >= first;
 };
 
-const accessors = {
+const dataAccessors = {
   xAccessor: (datum: ChartDataItem) => datum.xAxis,
   yAccessor: (datum: ChartDataItem) => datum.yAxis,
 };
@@ -45,6 +51,16 @@ export const LineSeriesChart = memo(
       return Math.max(...allYValues);
     }, [chartData]);
 
+    const xScale = { type: 'band' };
+    const yScale = useMemo(
+      () => ({
+        type: 'linear',
+        range: [yMax, 0],
+        domain: [0, maxYValue + 20],
+      }),
+      [maxYValue, yMax],
+    );
+
     const isTrendingUp = isUpwardTrend(
       chartData.map(item => Number(item.yAxis)),
     );
@@ -54,17 +70,13 @@ export const LineSeriesChart = memo(
         <XYChart
           margin={margin}
           height={height}
-          xScale={{ type: 'band' }}
-          yScale={{
-            type: 'linear',
-            range: [yMax, 0],
-            domain: [0, maxYValue + 20],
-          }}
+          xScale={xScale as never}
+          yScale={yScale as never}
         >
           <AnimatedLineSeries
             dataKey="Line 1"
             data={chartData}
-            {...accessors}
+            {...dataAccessors}
             curve={curveLinear}
             stroke={accentColor}
           />
@@ -75,11 +87,7 @@ export const LineSeriesChart = memo(
             showVerticalCrosshair
             showSeriesGlyphs
             showDatumGlyph
-            style={{
-              ...defaultStyles,
-              textAlign: 'center',
-              backgroundColor: '#F8F8FF',
-            }}
+            style={tooltipStyles}
             renderTooltip={({ tooltipData }) => {
               const datum: ChartDataItem | ChartSeriesData | undefined =
                 tooltipData?.nearestDatum?.datum;
@@ -87,7 +95,7 @@ export const LineSeriesChart = memo(
                 <TooltipContent
                   accentColor={accentColor}
                   datum={datum as ChartDataItem}
-                  yAxisValue={accessors.yAccessor(datum as ChartDataItem)}
+                  yAxisValue={dataAccessors.yAccessor(datum as ChartDataItem)}
                 />
               );
             }}

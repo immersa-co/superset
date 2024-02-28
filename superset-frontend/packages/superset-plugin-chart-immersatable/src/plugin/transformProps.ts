@@ -1,6 +1,7 @@
 import { ChartProps } from '@superset-ui/core';
+import { getSinceUntil } from '../utils';
+import { processColumns } from '../superset-core-utils';
 import { DataType } from '../types';
-import { getSinceUntil, processColumns } from '../utils';
 
 export default function transformProps(chartProps: ChartProps) {
   const {

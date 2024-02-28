@@ -4,7 +4,7 @@ import { AreaClosed } from '@visx/shape';
 import { LinearGradient } from '@visx/gradient';
 import { curveMonotoneX } from '@visx/curve';
 import { ScaleLinear, ScaleTime } from 'd3-scale';
-import { ChartData, ChartMargin, ChartDataItem } from '../../types';
+import { ChartData, ChartDataItem, ChartMargin } from '../../types';
 
 export type IAreaChartProps = {
   id: string;
