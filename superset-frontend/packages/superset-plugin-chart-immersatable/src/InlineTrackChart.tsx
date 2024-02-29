@@ -154,7 +154,7 @@ const InlineTrackChart = withResponsive(
             }}
           >
             {formatDate(getDate(tooltipData))}
-            <div style={{ paddingTop: '7px', fontWeight: '600' }}>
+            <div style={{ paddingTop: '7px', fontWeight: 600 }}>
               {formatValue(tooltipData)}
             </div>
           </Tooltip>

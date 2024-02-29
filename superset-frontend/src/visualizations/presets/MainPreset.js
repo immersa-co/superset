@@ -74,7 +74,6 @@ import {
   TimeFilterPlugin,
   TimeColumnFilterPlugin,
   TimeGrainFilterPlugin,
-  GroupByFilterPlugin,
 } from 'src/filters/components';
 import { PivotTableChartPlugin as PivotTableChartPluginV2 } from '@superset-ui/plugin-chart-pivot-table';
 import { HandlebarsChartPlugin } from '@superset-ui/plugin-chart-handlebars';
@@ -84,10 +83,10 @@ import TimeTableChartPlugin from '../TimeTable';
 
 export default class MainPreset extends Preset {
   constructor() {
-    const experimentalplugins = isFeatureEnabled(
-      FeatureFlag.DASHBOARD_FILTERS_EXPERIMENTAL,
+    const experimentalPlugins = isFeatureEnabled(
+      FeatureFlag.ChartPluginsExperimental,
     )
-      ? [new GroupByFilterPlugin().configure({ key: 'filter_groupby' })]
+      ? [new PopKPIPlugin().configure({ key: 'pop_kpi' })]
       : [];
 
     super({
@@ -107,7 +106,7 @@ export default class MainPreset extends Preset {
         new CountryMapChartPlugin().configure({ key: 'country_map' }),
         new DistBarChartPlugin().configure({ key: 'dist_bar' }),
         new EventFlowChartPlugin().configure({ key: 'event_flow' }),
-        new FilterBoxChartPlugin().configure({ key: 'filter_box' }),
+        // new FilterBoxChartPlugin().configure({ key: 'filter_box' }),
         new EchartsFunnelChartPlugin().configure({ key: 'funnel' }),
         new EchartsTreemapChartPlugin().configure({ key: 'treemap_v2' }),
         new EchartsGaugeChartPlugin().configure({ key: 'gauge_chart' }),

@@ -108,7 +108,7 @@ export const LineSeriesChart = memo(({ chartData }: ILineSeriesChartProps) => {
                   </div>
                   <div className="value">
                     <ColoredSquare color={accentColor} />
-                    <div style={{ fontWeight: '600' }}>
+                    <div style={{ fontWeight: 600 }}>
                       {accessors.yAccessor(nearestDatum.datum)}
                     </div>
                   </div>

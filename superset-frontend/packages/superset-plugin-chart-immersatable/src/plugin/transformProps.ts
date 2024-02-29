@@ -177,8 +177,8 @@ const processColumns = memoizeOne(function processColumns(
         isPercentMetric && verboseMap?.hasOwnProperty(key.replace('%', ''))
           ? `%${verboseMap[key.replace('%', '')]}`
           : verboseMap?.[key] || key;
-      const isTime = dataType === GenericDataType.Temporal;
-      const isNumber = dataType === GenericDataType.Numeric;
+      const isTime = dataType === GenericDataType.TEMPORAL;
+      const isNumber = dataType === GenericDataType.NUMERIC;
       const savedFormat = columnFormats?.[key];
       const savedCurrency = currencyFormats?.[key];
       const numberFormat = config.d3NumberFormat || savedFormat;
@@ -227,7 +227,7 @@ const processColumns = memoizeOne(function processColumns(
         key,
         label,
         dataType,
-        isNumeric: dataType === GenericDataType.Numeric,
+        isNumeric: dataType === GenericDataType.NUMERIC,
         isMetric,
         isPercentMetric,
         formatter,
