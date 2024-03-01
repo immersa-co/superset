@@ -78,6 +78,7 @@
     "last 3 edge versions"
   ],
   "dependencies": {
+    "@airbnb/config-babel": "^2.2.4",
     "@ant-design/icons": "^5.0.1",
     "@babel/runtime-corejs3": "^7.22.6",
     "@emotion/babel-preset-css-prop": "^11.2.0",
