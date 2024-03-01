@@ -1,17 +1,11 @@
 import React, { useMemo } from 'react';
 import { Group } from '@visx/group';
 import { AreaClosed } from '@visx/shape';
-import { AxisLeft, AxisBottom } from '@visx/axis';
 import { LinearGradient } from '@visx/gradient';
 import { curveMonotoneX } from '@visx/curve';
 
 import { ChartData, ChartMargin, ChartDataType, ChartDataItem } from './types';
 import { useChartAccessorsAndScales } from './hooks';
-import {
-  ChartBottomAxisBaseConfig,
-  ChartLeftAxisBaseConfig,
-  formatDateForChart,
-} from './utils';
 
 export interface IAreaChartProps {
   id: string;
@@ -25,8 +19,6 @@ export interface IAreaChartProps {
   width: number;
   height: number;
   margin: ChartMargin;
-  hideBottomAxis?: boolean;
-  hideLeftAxis?: boolean;
   top?: number;
   left?: number;
 }
@@ -41,8 +33,6 @@ export const AreaChart = ({
   xField,
   yField,
   margin,
-  hideBottomAxis = false,
-  hideLeftAxis = false,
   fromOpacity = 1,
   toOpacity = 0.1,
   top,
@@ -96,26 +86,6 @@ export const AreaChart = ({
         fill={`url(#${id}-chart-gradient)`}
         curve={curveMonotoneX}
       />
-
-      {!hideBottomAxis && (
-        <AxisBottom
-          top={bounds.yMax}
-          scale={xScale as never}
-          numTicks={width > 520 ? 10 : 5}
-          tickFormat={
-            dataType === 'date' ? (formatDateForChart as never) : undefined
-          }
-          {...ChartBottomAxisBaseConfig}
-        />
-      )}
-
-      {!hideLeftAxis && (
-        <AxisLeft
-          scale={yScale as never}
-          numTicks={5}
-          {...ChartLeftAxisBaseConfig}
-        />
-      )}
     </Group>
   );
 };

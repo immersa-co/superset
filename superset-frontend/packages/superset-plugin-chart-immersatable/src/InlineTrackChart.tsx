@@ -119,8 +119,6 @@ const InlineTrackChart = withResponsive(
             width={width}
             height={height}
             margin={margin}
-            hideBottomAxis
-            hideLeftAxis
           />
           <TinyTooltip
             margin={margin}
