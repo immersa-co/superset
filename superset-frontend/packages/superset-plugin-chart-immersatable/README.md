@@ -1,4 +1,4 @@
-# superset-plugin-chart-immersatable.
+# superset-plugin-chart-immersatable
 
 This is the Table for sparklines and values. Superset Chart Plugin.
 
