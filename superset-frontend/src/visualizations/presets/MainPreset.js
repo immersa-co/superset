@@ -74,19 +74,20 @@ import {
   TimeFilterPlugin,
   TimeColumnFilterPlugin,
   TimeGrainFilterPlugin,
-  GroupByFilterPlugin,
 } from 'src/filters/components';
 import { PivotTableChartPlugin as PivotTableChartPluginV2 } from '@superset-ui/plugin-chart-pivot-table';
 import { HandlebarsChartPlugin } from '@superset-ui/plugin-chart-handlebars';
+import { PopKPIPlugin } from '@superset-ui/plugin-chart-period-over-period-kpi';
+import { SupersetPluginChartImmersatable } from 'packages/superset-plugin-chart-immersatable/src';
 import FilterBoxChartPlugin from '../FilterBox/FilterBoxChartPlugin';
 import TimeTableChartPlugin from '../TimeTable';
 
 export default class MainPreset extends Preset {
   constructor() {
-    const experimentalplugins = isFeatureEnabled(
-      FeatureFlag.DASHBOARD_FILTERS_EXPERIMENTAL,
+    const experimentalPlugins = isFeatureEnabled(
+      FeatureFlag.ChartPluginsExperimental,
     )
-      ? [new GroupByFilterPlugin().configure({ key: 'filter_groupby' })]
+      ? [new PopKPIPlugin().configure({ key: 'pop_kpi' })]
       : [];
 
     super({
@@ -166,7 +167,10 @@ export default class MainPreset extends Preset {
         new EchartsSunburstChartPlugin().configure({ key: 'sunburst_v2' }),
         new HandlebarsChartPlugin().configure({ key: 'handlebars' }),
         new EchartsBubbleChartPlugin().configure({ key: 'bubble_v2' }),
-        ...experimentalplugins,
+        new SupersetPluginChartImmersatable().configure({
+          key: 'ext-immersa-table',
+        }),
+        ...experimentalPlugins,
       ],
     });
   }

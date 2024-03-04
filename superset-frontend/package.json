@@ -78,6 +78,7 @@
     "last 3 edge versions"
   ],
   "dependencies": {
+    "@airbnb/config-babel": "^2.2.4",
     "@ant-design/icons": "^5.0.1",
     "@babel/runtime-corejs3": "^7.22.6",
     "@emotion/babel-preset-css-prop": "^11.2.0",
@@ -109,6 +110,7 @@
     "@superset-ui/legacy-preset-chart-nvd3": "file:./plugins/legacy-preset-chart-nvd3",
     "@superset-ui/plugin-chart-echarts": "file:./plugins/plugin-chart-echarts",
     "@superset-ui/plugin-chart-handlebars": "file:./plugins/plugin-chart-handlebars",
+    "@superset-ui/plugin-chart-period-over-period-kpi": "file:./plugins/plugin-chart-period-over-period-kpi",
     "@superset-ui/plugin-chart-pivot-table": "file:./plugins/plugin-chart-pivot-table",
     "@superset-ui/plugin-chart-table": "file:./plugins/plugin-chart-table",
     "@superset-ui/plugin-chart-word-cloud": "file:./plugins/plugin-chart-word-cloud",
@@ -213,7 +215,9 @@
     "use-event-callback": "^0.1.0",
     "use-immer": "^0.8.1",
     "use-query-params": "^1.1.9",
-    "yargs": "^15.4.1"
+    "yargs": "^15.4.1",
+    "@visx/vendor": "3.5.0",
+    "@visx/gradient": "^3.3.0"
   },
   "devDependencies": {
     "@applitools/eyes-storybook": "^3.30.1",
