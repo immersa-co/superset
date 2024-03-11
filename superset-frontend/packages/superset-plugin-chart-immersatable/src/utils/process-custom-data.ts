@@ -34,7 +34,9 @@ export const processCustomData = (
       const isItemInTimeRangeCols = timeRangeCols.includes(item);
       const isDateRangeDefined = startDate && endDate;
       const isValueArrayString =
-        typeof value === 'string' && value.includes('[');
+        typeof value === 'string' &&
+        value.startsWith('[[') &&
+        value.endsWith(']]');
       const parsedValue = isValueArrayString ? JSON.parse(value) : null;
       if (
         isItemInTimeRangeCols &&

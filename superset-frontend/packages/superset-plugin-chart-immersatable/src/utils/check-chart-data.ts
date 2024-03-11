@@ -1,6 +1,7 @@
 export const checkChartData = (cellValue: string) => {
   if (
-    cellValue?.toString().includes('[') &&
+    cellValue.startsWith('[[') &&
+    cellValue.endsWith(']]') &&
     Array.isArray(JSON.parse(cellValue as string))
   ) {
     return true;
