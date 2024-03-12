@@ -1,34 +1,22 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
 import {
   QueryFormData,
   supersetTheme,
   DataRecordFilters,
+  DataRecordValue,
+  GenericDataType,
+  TimeFormatter,
+  NumberFormatter,
+  CurrencyFormatter,
+  Currency,
 } from '@superset-ui/core';
-import { DataColumnMeta } from './plugin/transformProps';
+import { ScaleOrdinal } from 'd3-scale';
 
-export interface SupersetPluginChartImmersatableStylesProps {
+export type SupersetPluginChartImmersatableStylesProps = {
   height: number;
   width: number;
   headerFontSize: keyof typeof supersetTheme.typography.sizes;
   boldText: boolean;
-}
+};
 
 interface SupersetPluginChartHelloWorldCustomizeProps {
   headerText: string;
@@ -37,6 +25,35 @@ interface SupersetPluginChartHelloWorldCustomizeProps {
 export type SupersetPluginChartHelloWorldQueryFormData = QueryFormData &
   SupersetPluginChartImmersatableStylesProps &
   SupersetPluginChartHelloWorldCustomizeProps;
+
+type CustomFormatter = (value: DataRecordValue) => string;
+
+export type TableColumnConfig = {
+  d3NumberFormat?: string;
+  d3SmallNumberFormat?: string;
+  d3TimeFormat?: string;
+  columnWidth?: number;
+  horizontalAlign?: 'left' | 'right' | 'center';
+  showCellBars?: boolean;
+  alignPositiveNegative?: boolean;
+  colorPositiveNegative?: boolean;
+  truncateLongCells?: boolean;
+  currencyFormat?: Currency;
+};
+export type DataColumnMeta = {
+  key: string;
+  label: string;
+  dataType: GenericDataType;
+  formatter?:
+    | TimeFormatter
+    | NumberFormatter
+    | CustomFormatter
+    | CurrencyFormatter;
+  isMetric?: boolean;
+  isPercentMetric?: boolean;
+  isNumeric?: boolean;
+  config?: TableColumnConfig;
+};
 
 export type SupersetPluginChartImmersatableProps =
   SupersetPluginChartImmersatableStylesProps &
@@ -51,7 +68,7 @@ export type SupersetPluginChartImmersatableProps =
       emitCrossFilters?: boolean;
       allowRearrangeColumns?: boolean;
       filters?: DataRecordFilters;
-      // add typing here for the props you pass in from transformProps.ts!
+      includeSearch?: boolean;
     };
 
 export type ChartGenericDataItem = Record<string, string | number>;
@@ -74,6 +91,7 @@ export type ColorsVariants = {
 };
 
 export type ChartData = ChartDataItem[];
+
 export type ChartMargin = {
   top: number;
   right: number;
@@ -83,3 +101,9 @@ export type ChartMargin = {
 export type ChartDataType = 'date' | 'string' | 'number';
 
 export type DataType = Record<string, unknown>;
+
+export type ChartSeriesData = {
+  xAxis: string;
+  labels?: { [serieKey: string]: string };
+  colorScale?: ScaleOrdinal<string, ColorsVariants | string>;
+} & { [serieKey: string]: number | string };
