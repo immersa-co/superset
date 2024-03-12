@@ -182,7 +182,6 @@ export default function SupersetPluginChartImmersatable(
       <DataTable
         columns={columns}
         processedData={processedData}
-        height={height}
         onColumnOrderChange={() => setColumnOrderToggle(!columnOrderToggle)}
         searchInput={includeSearch && SearchInput}
         headerText={headerText}

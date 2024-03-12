@@ -19,6 +19,7 @@ import { DataType } from '../../types';
 import GlobalFilter, { GlobalFilterProps } from './GlobalFilter';
 import { ContainerStyled, HeaderStyled } from '../../Styles';
 
+const ITEM_SIZE = 70;
 const DEFAULT_WIDTH = '100%';
 
 const defaultWidthStyle = { width: DEFAULT_WIDTH };
@@ -26,7 +27,6 @@ const defaultWidthStyle = { width: DEFAULT_WIDTH };
 export const DataTable = ({
   columns,
   processedData,
-  height,
   onColumnOrderChange,
   searchInput = true,
   headerText,
@@ -35,7 +35,6 @@ export const DataTable = ({
   processedData: {
     [x: string]: any;
   }[];
-  height: number;
   onColumnOrderChange: () => void;
   searchInput?: boolean | GlobalFilterProps<any>['searchInput'];
   headerText: string;
@@ -141,10 +140,7 @@ export const DataTable = ({
     <>
       <div>
         {searchInput ? (
-          <div
-            className="col-sm-6"
-            style={{ marginLeft: '50%', marginBottom: '5px' }}
-          >
+          <div className="col-sm-6" style={{ marginBottom: '5px' }}>
             <GlobalFilter<any>
               searchInput={
                 typeof searchInput === 'boolean' ? undefined : searchInput
@@ -161,9 +157,9 @@ export const DataTable = ({
         <div {...getTableProps()}>{renderedHeaderGroups}</div>
         <div {...getTableBodyProps()}>
           <List
-            height={height}
+            height={rows.length * ITEM_SIZE}
             itemCount={rows.length}
-            itemSize={70}
+            itemSize={ITEM_SIZE}
             width={DEFAULT_WIDTH}
           >
             {({ index, style }) => {
