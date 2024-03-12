@@ -91,6 +91,32 @@ const config: ControlPanelConfig = {
         ],
         [
           {
+            name: 'include_search',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Search box'),
+              renderTrigger: true,
+              default: false,
+              description: t('Whether to include a client-side search box'),
+            },
+          },
+        ],
+        [
+          {
+            name: 'allow_rearrange_columns',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Allow columns to be rearranged'),
+              renderTrigger: true,
+              default: false,
+              description: t(
+                "Allow end user to drag-and-drop column headers to rearrange them. Note their changes won't persist for the next time they open the chart.",
+              ),
+            },
+          },
+        ],
+        [
+          {
             name: 'time_range_cols',
             config: {
               ...sharedControls.groupby,

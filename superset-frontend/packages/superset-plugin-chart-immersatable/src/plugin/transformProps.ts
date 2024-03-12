@@ -13,10 +13,15 @@ export default function transformProps(chartProps: ChartProps) {
     filterState,
   } = chartProps;
 
-  const { allow_rearrange_columns: allowRearrangeColumns } = formData;
-
-  const { boldText, headerFontSize, headerText, timeRange, timeRangeCols } =
-    formData;
+  const {
+    boldText,
+    headerFontSize,
+    headerText,
+    timeRange,
+    timeRangeCols,
+    allowRearrangeColumns,
+    includeSearch,
+  } = formData;
 
   const [startDate, endDate] = getSinceUntil(timeRange.toLocaleLowerCase());
 
@@ -41,6 +46,7 @@ export default function transformProps(chartProps: ChartProps) {
     percentMetrics,
     columns,
     allowRearrangeColumns,
+    includeSearch,
     emitCrossFilters,
     filters: filterState.filters,
   };

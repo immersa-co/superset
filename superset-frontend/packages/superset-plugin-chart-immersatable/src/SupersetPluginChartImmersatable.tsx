@@ -1,6 +1,13 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable theme-colors/no-literal-colors */
-import React, { CSSProperties, createRef, useMemo, useCallback } from 'react';
-import { DataRecordValue } from '@superset-ui/core';
+import React, {
+  CSSProperties,
+  createRef,
+  useMemo,
+  useCallback,
+  useState,
+} from 'react';
+import { DataRecordValue, t, tn } from '@superset-ui/core';
 import { ColumnWithLooseAccessor } from 'react-table';
 import {
   ChartData,
@@ -8,11 +15,30 @@ import {
   DataColumnMeta,
 } from './types';
 import { DataTable, LineSeriesChart } from './components';
-import { ContainerStyled, HeaderStyled, Styles } from './Styles';
+import { Styles } from './Styles';
 import { checkChartData, processCustomData } from './utils';
 import { formatColumnValue, getSharedStyle } from './superset-core-utils';
+import { SearchInputProps } from './components/DataTable/GlobalFilter';
 
 const DEFAULT_WIDTH = '200px';
+
+function SearchInput({ count, value, onChange }: SearchInputProps) {
+  return (
+    <span
+      className="dt-global-filter"
+      style={{ display: 'flex', alignItems: 'center' }}
+    >
+      {t('Search')}{' '}
+      <input
+        className="form-control input-sm"
+        placeholder={tn('search.num_records', count)}
+        value={value}
+        onChange={onChange}
+        style={{ marginLeft: '10px' }}
+      />
+    </span>
+  );
+}
 
 export default function SupersetPluginChartImmersatable(
   props: SupersetPluginChartImmersatableProps,
@@ -29,7 +55,11 @@ export default function SupersetPluginChartImmersatable(
     boldText,
     headerFontSize,
     headerText,
+    allowRearrangeColumns = false,
+    includeSearch = false,
   } = props;
+
+  const [columnOrderToggle, setColumnOrderToggle] = useState(false);
 
   const isActiveFilterValue = useCallback(
     (key: string, val: DataRecordValue) => filters?.[key]?.includes(val),
@@ -104,20 +134,29 @@ export default function SupersetPluginChartImmersatable(
           );
         },
 
-        Header: ({ style }) => (
+        Header: ({ column: col, onClick, style, onDragStart, onDrop }) => (
           <div
             style={{
               width: columnWidth || DEFAULT_WIDTH,
               ...sharedStyle,
               ...style,
             }}
+            onClick={onClick}
+            data-column-name={col.id}
+            {...(allowRearrangeColumns && {
+              draggable: 'true',
+              onDragStart,
+              onDragOver: e => e.preventDefault(),
+              onDragEnter: e => e.preventDefault(),
+              onDrop,
+            })}
           >
             {label}
           </div>
         ),
       };
     },
-    [emitCrossFilters, isActiveFilterValue],
+    [allowRearrangeColumns, emitCrossFilters, isActiveFilterValue],
   );
 
   const columns = useMemo(
@@ -140,14 +179,14 @@ export default function SupersetPluginChartImmersatable(
       height={height}
       width={width}
     >
-      <ContainerStyled>
-        <HeaderStyled>{headerText}</HeaderStyled>
-        <DataTable
-          columns={columns}
-          processedData={processedData}
-          height={height}
-        />
-      </ContainerStyled>
+      <DataTable
+        columns={columns}
+        processedData={processedData}
+        height={height}
+        onColumnOrderChange={() => setColumnOrderToggle(!columnOrderToggle)}
+        searchInput={includeSearch && SearchInput}
+        headerText={headerText}
+      />
     </Styles>
   );
 }
