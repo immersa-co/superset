@@ -21,6 +21,7 @@ export default function transformProps(chartProps: ChartProps) {
     timeRangeCols,
     allowRearrangeColumns,
     includeSearch,
+    areaChartCols,
   } = formData;
 
   const [startDate, endDate] = getSinceUntil(timeRange.toLocaleLowerCase());
@@ -49,5 +50,6 @@ export default function transformProps(chartProps: ChartProps) {
     includeSearch,
     emitCrossFilters,
     filters: filterState.filters,
+    areaChartCols,
   };
 }

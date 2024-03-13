@@ -14,7 +14,7 @@ import {
   SupersetPluginChartImmersatableProps,
   DataColumnMeta,
 } from './types';
-import { DataTable, LineSeriesChart } from './components';
+import { AreaChart, DataTable, LineSeriesChart } from './components';
 import { Styles } from './Styles';
 import { checkChartData, processCustomData } from './utils';
 import { formatColumnValue, getSharedStyle } from './superset-core-utils';
@@ -57,6 +57,7 @@ export default function SupersetPluginChartImmersatable(
     headerText,
     allowRearrangeColumns = false,
     includeSearch = false,
+    areaChartCols,
   } = props;
 
   const [columnOrderToggle, setColumnOrderToggle] = useState(false);
@@ -109,9 +110,14 @@ export default function SupersetPluginChartImmersatable(
               xAxis: row[0],
               yAxis: row[1],
             }));
+
+            const ChartComponent = areaChartCols.includes(label)
+              ? AreaChart
+              : LineSeriesChart;
+
             return (
               <div {...cellProps} style={commonStyle}>
-                <LineSeriesChart
+                <ChartComponent
                   chartData={chartData as ChartData}
                   height={50}
                 />
@@ -156,7 +162,12 @@ export default function SupersetPluginChartImmersatable(
         ),
       };
     },
-    [allowRearrangeColumns, emitCrossFilters, isActiveFilterValue],
+    [
+      allowRearrangeColumns,
+      areaChartCols,
+      emitCrossFilters,
+      isActiveFilterValue,
+    ],
   );
 
   const columns = useMemo(

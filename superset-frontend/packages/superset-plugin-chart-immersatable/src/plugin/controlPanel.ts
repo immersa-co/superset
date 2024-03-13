@@ -117,6 +117,19 @@ const config: ControlPanelConfig = {
         ],
         [
           {
+            name: 'area_chart_cols',
+            config: {
+              ...sharedControls.groupby,
+              label: t('Display Area Chart'),
+              renderTrigger: true,
+              description: t(
+                'Select Columns for which you want to display the Area chart',
+              ),
+            },
+          },
+        ],
+        [
+          {
             name: 'time_range_cols',
             config: {
               ...sharedControls.groupby,

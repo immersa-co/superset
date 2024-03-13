@@ -69,6 +69,7 @@ export type SupersetPluginChartImmersatableProps =
       allowRearrangeColumns?: boolean;
       filters?: DataRecordFilters;
       includeSearch?: boolean;
+      areaChartCols: string[];
     };
 
 export type ChartGenericDataItem = Record<string, string | number>;
