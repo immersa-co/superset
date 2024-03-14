@@ -1,8 +1,15 @@
-import { t, validateNonEmpty } from '@superset-ui/core';
+import {
+  t,
+  validateNonEmpty,
+  isFeatureEnabled,
+  FeatureFlag,
+} from '@superset-ui/core';
 import {
   ControlPanelConfig,
   sharedControls,
+  ControlPanelsContainerProps,
 } from '@superset-ui/chart-controls';
+import { PAGE_SIZE_OPTIONS } from '../consts';
 
 const config: ControlPanelConfig = {
   controlPanelSections: [
@@ -31,10 +38,43 @@ const config: ControlPanelConfig = {
           },
         ],
         ['adhoc_filters'],
+        isFeatureEnabled(FeatureFlag.DASHBOARD_CROSS_FILTERS) ||
+        isFeatureEnabled(FeatureFlag.DASHBOARD_NATIVE_FILTERS)
+          ? [
+              {
+                name: 'server_pagination',
+                config: {
+                  type: 'CheckboxControl',
+                  label: t('Server pagination'),
+                  description: t(
+                    'Enable server side pagination of results (experimental feature)',
+                  ),
+                  default: false,
+                },
+              },
+            ]
+          : [],
         [
           {
             name: 'row_limit',
-            config: sharedControls.row_limit,
+            override: {
+              default: 1000,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                !controls?.server_pagination?.value,
+            },
+          },
+          {
+            name: 'server_page_length',
+            config: {
+              type: 'SelectControl',
+              freeForm: true,
+              label: t('Server Page Length'),
+              default: 10,
+              choices: PAGE_SIZE_OPTIONS,
+              description: t('Rows per page, 0 means no pagination'),
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                Boolean(controls?.server_pagination?.value),
+            },
           },
         ],
       ],
@@ -88,6 +128,23 @@ const config: ControlPanelConfig = {
               description: t('The size of your header font'),
             },
           },
+        ],
+        [
+          {
+            name: 'page_length',
+            config: {
+              type: 'SelectControl',
+              freeForm: true,
+              renderTrigger: true,
+              label: t('Page length'),
+              default: null,
+              choices: PAGE_SIZE_OPTIONS,
+              description: t('Rows per page, 0 means no pagination'),
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                !controls?.server_pagination?.value,
+            },
+          },
+          null,
         ],
         [
           {

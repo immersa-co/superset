@@ -19,6 +19,12 @@ import { Styles } from './Styles';
 import { checkChartData, processCustomData } from './utils';
 import { formatColumnValue, getSharedStyle } from './superset-core-utils';
 import { SearchInputProps } from './components/DataTable/GlobalFilter';
+import { PAGE_SIZE_OPTIONS } from './consts';
+import { updateExternalFormData } from './superset-core-utils/externalAPIs';
+import {
+  SelectPageSizeRendererProps,
+  SizeOption,
+} from './components/DataTable/SelectPageSize';
 
 const DEFAULT_WIDTH = '200px';
 
@@ -36,6 +42,38 @@ function SearchInput({ count, value, onChange }: SearchInputProps) {
         onChange={onChange}
         style={{ marginLeft: '10px' }}
       />
+    </span>
+  );
+}
+
+function SelectPageSize({
+  options,
+  current,
+  onChange,
+}: SelectPageSizeRendererProps) {
+  return (
+    <span className="dt-select-page-size form-inline">
+      {t('page_size.show')}{' '}
+      <select
+        className="form-control input-sm"
+        value={current}
+        onBlur={() => {}}
+        onChange={e => {
+          onChange(Number((e.target as HTMLSelectElement).value));
+        }}
+      >
+        {options.map(option => {
+          const [size, text] = Array.isArray(option)
+            ? option
+            : [option, option];
+          return (
+            <option key={size} value={size}>
+              {text}
+            </option>
+          );
+        })}
+      </select>{' '}
+      {t('page_size.entries')}
     </span>
   );
 }
@@ -58,9 +96,24 @@ export default function SupersetPluginChartImmersatable(
     allowRearrangeColumns = false,
     includeSearch = false,
     areaChartCols,
+    rowCount = 0,
+    serverPagination = false,
+    pageSize = 0,
+    serverPaginationData,
+    setDataMask,
   } = props;
 
+  console.log('rowCount', rowCount);
+
   const [columnOrderToggle, setColumnOrderToggle] = useState(false);
+
+  // only take relevant page size options
+  const pageSizeOptions = useMemo(() => {
+    const getServerPagination = (n: number) => n <= rowCount;
+    return PAGE_SIZE_OPTIONS.filter(([n]) =>
+      serverPagination ? getServerPagination(n) : n <= 2 * data.length,
+    ) as SizeOption[];
+  }, [data.length, rowCount, serverPagination]);
 
   const isActiveFilterValue = useCallback(
     (key: string, val: DataRecordValue) => filters?.[key]?.includes(val),
@@ -175,13 +228,19 @@ export default function SupersetPluginChartImmersatable(
     [columnsMeta, getColumnConfigs],
   );
 
+  const handleServerPaginationChange = useCallback(
+    (pageNumber: number, pageSize: number) => {
+      updateExternalFormData(setDataMask, pageNumber, pageSize);
+    },
+    [setDataMask],
+  );
+
   const processedData = useMemo(
     () => processCustomData(data, timeRangeCols, timeSinceUntil),
     [data, timeSinceUntil, timeRangeCols],
   );
 
   const rootElem = createRef<HTMLDivElement>();
-
   return (
     <Styles
       ref={rootElem}
@@ -196,6 +255,15 @@ export default function SupersetPluginChartImmersatable(
         onColumnOrderChange={() => setColumnOrderToggle(!columnOrderToggle)}
         searchInput={includeSearch && SearchInput}
         headerText={headerText}
+        serverPagination={serverPagination}
+        pageSizeOptions={pageSizeOptions}
+        pageSize={pageSize}
+        rowCount={rowCount}
+        data={data}
+        serverPaginationData={serverPaginationData}
+        onServerPaginationChange={handleServerPaginationChange}
+        selectPageSize={pageSize !== null && SelectPageSize}
+        maxPageItemCount={width > 340 ? 9 : 7}
       />
     </Styles>
   );

@@ -18,7 +18,7 @@ const filterDataByDateInterval = (
 
 export const processCustomData = (
   myData: CustomData[],
-  timeRangeCols: string[],
+  timeRangeCols: string[] = [],
   timeSinceUntil: {
     startDate: Date;
     endDate: Date;

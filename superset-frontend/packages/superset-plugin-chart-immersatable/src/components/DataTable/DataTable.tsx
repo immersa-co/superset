@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable theme-colors/no-literal-colors */
-import React, { useMemo } from 'react';
+import React, { CSSProperties, useMemo, useRef } from 'react';
 import {
   ColumnWithLooseAccessor,
   useSortBy,
@@ -18,6 +18,12 @@ import { TableHeaderIcon } from './TableHeaderIcon';
 import { DataType } from '../../types';
 import GlobalFilter, { GlobalFilterProps } from './GlobalFilter';
 import { ContainerStyled, HeaderStyled } from '../../Styles';
+import { PAGE_SIZE_OPTIONS } from '../../consts';
+import SelectPageSize, {
+  SelectPageSizeProps,
+  SizeOption,
+} from './SelectPageSize';
+import SimplePagination from './Pagination';
 
 const ITEM_SIZE = 70;
 const DEFAULT_WIDTH = '100%';
@@ -30,6 +36,15 @@ export const DataTable = ({
   onColumnOrderChange,
   searchInput = true,
   headerText,
+  serverPagination,
+  pageSizeOptions = PAGE_SIZE_OPTIONS,
+  pageSize: initialPageSize = 0,
+  rowCount,
+  data,
+  serverPaginationData,
+  onServerPaginationChange,
+  selectPageSize,
+  maxPageItemCount = 9,
 }: {
   columns: ColumnWithLooseAccessor<any>[];
   processedData: {
@@ -38,6 +53,15 @@ export const DataTable = ({
   onColumnOrderChange: () => void;
   searchInput?: boolean | GlobalFilterProps<any>['searchInput'];
   headerText: string;
+  pageSizeOptions?: SizeOption[];
+  serverPagination?: boolean;
+  pageSize?: number;
+  rowCount: number;
+  data: DataType[];
+  serverPaginationData: { pageSize?: number; currentPage?: number };
+  onServerPaginationChange: (pageNumber: number, pageSize: number) => void;
+  selectPageSize?: boolean | SelectPageSizeProps['selectRenderer'];
+  maxPageItemCount?: number;
 }) => {
   const tableHooks: PluginHook<any>[] = [
     useGlobalFilter,
@@ -45,6 +69,16 @@ export const DataTable = ({
     usePagination,
     useColumnOrder,
   ].flat();
+
+  console.log('initialPageSize', initialPageSize);
+
+  const resultsSize = serverPagination ? rowCount : data.length;
+
+  const hasPagination = initialPageSize > 0 && 1 > 0; // pageSize == 0 means no pagination
+  const hasGlobalControl = hasPagination || !!searchInput;
+
+  const globalControlRef = useRef<HTMLDivElement>(null);
+  const paginationRef = useRef<HTMLDivElement>(null);
 
   const {
     headerGroups,
@@ -56,7 +90,10 @@ export const DataTable = ({
     allColumns,
     preGlobalFilteredRows,
     setGlobalFilter,
-    state: { globalFilter: filterValue },
+    state: { pageIndex, pageSize, globalFilter: filterValue, sticky = {} },
+    pageCount,
+    gotoPage,
+    setPageSize: setPageSize_,
   } = useTable<DataType>(
     {
       columns,
@@ -64,6 +101,16 @@ export const DataTable = ({
     },
     ...tableHooks,
   );
+  // make setPageSize accept 0
+  const setPageSize = (size: number) => {
+    if (serverPagination) {
+      onServerPaginationChange(0, size);
+    }
+    // keep the original size if data is empty
+    if (size || resultsSize !== 0) {
+      setPageSize_(size === 0 ? resultsSize : size);
+    }
+  };
 
   let columnBeingDragged = -1;
   const onDragStart = (e: React.DragEvent) => {
@@ -136,22 +183,74 @@ export const DataTable = ({
     [headerGroups, onDragStart, onDrop],
   );
 
+  const paginationStyle: CSSProperties = sticky.height
+    ? {}
+    : { visibility: 'hidden' };
+
+  console.log('pageSize', pageSize);
+  let resultPageCount = pageCount;
+  let resultCurrentPageSize = pageSize;
+  let resultCurrentPage = pageIndex;
+  let resultOnPageChange: (page: number) => void = gotoPage;
+  if (serverPagination) {
+    const serverPageSize = serverPaginationData?.pageSize ?? initialPageSize;
+    resultPageCount = Math.ceil(rowCount / serverPageSize);
+    if (!Number.isFinite(resultPageCount)) {
+      resultPageCount = 0;
+    }
+    console.log('serverPageSize', serverPageSize);
+    resultCurrentPageSize = serverPageSize;
+    const foundPageSizeIndex = pageSizeOptions.findIndex(
+      ([option]) => option >= resultCurrentPageSize,
+    );
+    if (foundPageSizeIndex === -1) {
+      resultCurrentPageSize = 0;
+    }
+    resultCurrentPage = serverPaginationData?.currentPage ?? 0;
+    resultOnPageChange = (pageNumber: number) =>
+      onServerPaginationChange(pageNumber, serverPageSize);
+  }
+
+  console.log('resultCurrentPageSize', resultCurrentPageSize);
+
   return (
     <>
       <div>
-        {searchInput ? (
-          <div className="col-sm-6" style={{ marginBottom: '5px' }}>
-            <GlobalFilter<any>
-              searchInput={
-                typeof searchInput === 'boolean' ? undefined : searchInput
-              }
-              preGlobalFilteredRows={preGlobalFilteredRows}
-              setGlobalFilter={setGlobalFilter}
-              filterValue={filterValue}
-            />
+        {hasGlobalControl ? (
+          <div ref={globalControlRef} className="form-inline dt-controls">
+            <div className="row">
+              <div className="col-sm-6">
+                {hasPagination ? (
+                  <SelectPageSize
+                    total={resultsSize}
+                    current={resultCurrentPageSize}
+                    options={pageSizeOptions}
+                    selectRenderer={
+                      typeof selectPageSize === 'boolean'
+                        ? undefined
+                        : selectPageSize
+                    }
+                    onChange={setPageSize}
+                  />
+                ) : null}
+              </div>
+              {searchInput ? (
+                <div className="col-sm-6" style={{ marginBottom: '5px' }}>
+                  <GlobalFilter<any>
+                    searchInput={
+                      typeof searchInput === 'boolean' ? undefined : searchInput
+                    }
+                    preGlobalFilteredRows={preGlobalFilteredRows}
+                    setGlobalFilter={setGlobalFilter}
+                    filterValue={filterValue}
+                  />
+                </div>
+              ) : null}
+            </div>
           </div>
         ) : null}
       </div>
+
       <ContainerStyled>
         <HeaderStyled>{headerText}</HeaderStyled>
         <div {...getTableProps()}>{renderedHeaderGroups}</div>
@@ -181,6 +280,19 @@ export const DataTable = ({
           </List>
         </div>
       </ContainerStyled>
+
+      <div>
+        {hasPagination && resultPageCount > 1 ? (
+          <SimplePagination
+            ref={paginationRef}
+            style={paginationStyle}
+            maxPageItemCount={maxPageItemCount}
+            pageCount={resultPageCount}
+            currentPage={resultCurrentPage}
+            onPageChange={resultOnPageChange}
+          />
+        ) : null}
+      </div>
     </>
   );
 };
