@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import buildQuery from '../../src/plugin/buildQuery';
+import buildQuery from '../../src/plugin/superset-core/buildQuery';
 
 describe('SupersetPluginChartImmersatable buildQuery', () => {
   const formData = {

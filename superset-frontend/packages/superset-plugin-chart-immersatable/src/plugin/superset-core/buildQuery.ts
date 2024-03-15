@@ -11,8 +11,8 @@ import {
 } from '@superset-ui/core';
 import { PostProcessingRule } from '@superset-ui/core/src/query/types/PostProcessing';
 import { BuildQuery } from '@superset-ui/core/src/chart/registries/ChartBuildQueryRegistrySingleton';
-import { TableChartFormData } from '../superset-core-utils';
-import { updateExternalFormData } from '../superset-core-utils/external-apis';
+import { TableChartFormData } from '../../superset-core-utils';
+import { updateExternalFormData } from '../../superset-core-utils/external-apis';
 
 /**
  * Infer query mode from form data. If `all_columns` is set, then raw records mode,
