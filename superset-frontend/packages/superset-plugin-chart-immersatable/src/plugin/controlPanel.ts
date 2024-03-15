@@ -1,8 +1,15 @@
-import { t, validateNonEmpty } from '@superset-ui/core';
+import {
+  t,
+  validateNonEmpty,
+  isFeatureEnabled,
+  FeatureFlag,
+} from '@superset-ui/core';
 import {
   ControlPanelConfig,
   sharedControls,
+  ControlPanelsContainerProps,
 } from '@superset-ui/chart-controls';
+import { PAGE_SIZE_OPTIONS } from '../superset-core-utils/consts';
 
 const config: ControlPanelConfig = {
   controlPanelSections: [
@@ -31,10 +38,43 @@ const config: ControlPanelConfig = {
           },
         ],
         ['adhoc_filters'],
+        isFeatureEnabled(FeatureFlag.DASHBOARD_CROSS_FILTERS) ||
+        isFeatureEnabled(FeatureFlag.DASHBOARD_NATIVE_FILTERS)
+          ? [
+              {
+                name: 'server_pagination',
+                config: {
+                  type: 'CheckboxControl',
+                  label: t('Server pagination'),
+                  description: t(
+                    'Enable server side pagination of results (experimental feature)',
+                  ),
+                  default: false,
+                },
+              },
+            ]
+          : [],
         [
           {
             name: 'row_limit',
-            config: sharedControls.row_limit,
+            override: {
+              default: 1000,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                !controls?.server_pagination?.value,
+            },
+          },
+          {
+            name: 'server_page_length',
+            config: {
+              type: 'SelectControl',
+              freeForm: true,
+              label: t('Server Page Length'),
+              default: 10,
+              choices: PAGE_SIZE_OPTIONS,
+              description: t('Rows per page, 0 means no pagination'),
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                Boolean(controls?.server_pagination?.value),
+            },
           },
         ],
       ],
@@ -91,6 +131,23 @@ const config: ControlPanelConfig = {
         ],
         [
           {
+            name: 'page_length',
+            config: {
+              type: 'SelectControl',
+              freeForm: true,
+              renderTrigger: true,
+              label: t('Page length'),
+              default: null,
+              choices: PAGE_SIZE_OPTIONS,
+              description: t('Rows per page, 0 means no pagination'),
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                !controls?.server_pagination?.value,
+            },
+          },
+          null,
+        ],
+        [
+          {
             name: 'include_search',
             config: {
               type: 'CheckboxControl',
@@ -111,6 +168,19 @@ const config: ControlPanelConfig = {
               default: false,
               description: t(
                 "Allow end user to drag-and-drop column headers to rearrange them. Note their changes won't persist for the next time they open the chart.",
+              ),
+            },
+          },
+        ],
+        [
+          {
+            name: 'area_chart_cols',
+            config: {
+              ...sharedControls.groupby,
+              label: t('Display Area Chart'),
+              renderTrigger: true,
+              description: t(
+                'Select Columns for which you want to display the Area chart',
               ),
             },
           },

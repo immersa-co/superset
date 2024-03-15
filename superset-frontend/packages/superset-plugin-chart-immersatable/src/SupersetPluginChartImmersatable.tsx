@@ -6,39 +6,31 @@ import React, {
   useMemo,
   useCallback,
   useState,
+  memo,
 } from 'react';
-import { DataRecordValue, t, tn } from '@superset-ui/core';
+import { DataRecordValue } from '@superset-ui/core';
 import { ColumnWithLooseAccessor } from 'react-table';
 import {
   ChartData,
   SupersetPluginChartImmersatableProps,
   DataColumnMeta,
 } from './types';
-import { DataTable, LineSeriesChart } from './components';
+import { AreaChart, DataTable, LineSeriesChart } from './components';
 import { Styles } from './Styles';
 import { checkChartData, processCustomData } from './utils';
-import { formatColumnValue, getSharedStyle } from './superset-core-utils';
-import { SearchInputProps } from './components/DataTable/GlobalFilter';
+import {
+  PAGE_SIZE_OPTIONS,
+  formatColumnValue,
+  getSharedStyle,
+  updateExternalFormData,
+} from './superset-core-utils';
+import {
+  SelectPageSize,
+  SizeOption,
+  SearchInput,
+} from './components/superset-core';
 
 const DEFAULT_WIDTH = '200px';
-
-function SearchInput({ count, value, onChange }: SearchInputProps) {
-  return (
-    <span
-      className="dt-global-filter"
-      style={{ display: 'flex', alignItems: 'center' }}
-    >
-      {t('Search')}{' '}
-      <input
-        className="form-control input-sm"
-        placeholder={tn('search.num_records', count)}
-        value={value}
-        onChange={onChange}
-        style={{ marginLeft: '10px' }}
-      />
-    </span>
-  );
-}
 
 export default function SupersetPluginChartImmersatable(
   props: SupersetPluginChartImmersatableProps,
@@ -57,9 +49,23 @@ export default function SupersetPluginChartImmersatable(
     headerText,
     allowRearrangeColumns = false,
     includeSearch = false,
+    areaChartCols,
+    rowCount = 0,
+    serverPagination = false,
+    pageSize = 0,
+    serverPaginationData,
+    setDataMask,
   } = props;
 
   const [columnOrderToggle, setColumnOrderToggle] = useState(false);
+
+  // only take relevant page size options
+  const pageSizeOptions = useMemo(() => {
+    const getServerPagination = (n: number) => n <= rowCount;
+    return PAGE_SIZE_OPTIONS.filter(([n]) =>
+      serverPagination ? getServerPagination(n) : n <= 2 * data.length,
+    ) as SizeOption[];
+  }, [data.length, rowCount, serverPagination]);
 
   const isActiveFilterValue = useCallback(
     (key: string, val: DataRecordValue) => filters?.[key]?.includes(val),
@@ -103,16 +109,21 @@ export default function SupersetPluginChartImmersatable(
             ].join(' '),
           };
 
-          const isChartData = checkChartData(text);
-          if (isChartData) {
-            const chartData = JSON.parse(text).map((row: any) => ({
+          const chartData = checkChartData(text);
+          if (chartData) {
+            const parsedChartData = chartData.map((row: any) => ({
               xAxis: row[0],
               yAxis: row[1],
             }));
+
+            const ChartComponent = areaChartCols.includes(label)
+              ? AreaChart
+              : LineSeriesChart;
+
             return (
               <div {...cellProps} style={commonStyle}>
-                <LineSeriesChart
-                  chartData={chartData as ChartData}
+                <ChartComponent
+                  chartData={parsedChartData as ChartData}
                   height={50}
                 />
               </div>
@@ -156,12 +167,24 @@ export default function SupersetPluginChartImmersatable(
         ),
       };
     },
-    [allowRearrangeColumns, emitCrossFilters, isActiveFilterValue],
+    [
+      allowRearrangeColumns,
+      areaChartCols,
+      emitCrossFilters,
+      isActiveFilterValue,
+    ],
   );
 
   const columns = useMemo(
     () => columnsMeta.map(getColumnConfigs),
     [columnsMeta, getColumnConfigs],
+  );
+
+  const handleServerPaginationChange = useCallback(
+    (pageNumber: number, pageSize: number) => {
+      updateExternalFormData(setDataMask, pageNumber, pageSize);
+    },
+    [setDataMask],
   );
 
   const processedData = useMemo(
@@ -170,7 +193,6 @@ export default function SupersetPluginChartImmersatable(
   );
 
   const rootElem = createRef<HTMLDivElement>();
-
   return (
     <Styles
       ref={rootElem}
@@ -185,6 +207,15 @@ export default function SupersetPluginChartImmersatable(
         onColumnOrderChange={() => setColumnOrderToggle(!columnOrderToggle)}
         searchInput={includeSearch && SearchInput}
         headerText={headerText}
+        serverPagination={serverPagination}
+        pageSizeOptions={pageSizeOptions}
+        pageSize={pageSize}
+        rowCount={rowCount}
+        data={data}
+        serverPaginationData={serverPaginationData}
+        onServerPaginationChange={handleServerPaginationChange}
+        selectPageSize={pageSize !== null && SelectPageSize}
+        maxPageItemCount={width > 340 ? 9 : 7} // TODO: handle the harcoded values.
       />
     </Styles>
   );

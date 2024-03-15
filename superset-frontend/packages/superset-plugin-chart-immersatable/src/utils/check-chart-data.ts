@@ -1,10 +1,8 @@
-export const checkChartData = (cellValue: string) => {
-  if (
-    cellValue.startsWith('[[') &&
-    cellValue.endsWith(']]') &&
-    Array.isArray(JSON.parse(cellValue as string))
-  ) {
-    return true;
+export const checkChartData = (text: string) => {
+  try {
+    const data = JSON.parse(text);
+    return Array.isArray(data) ? data : null;
+  } catch {
+    return null;
   }
-  return false;
 };

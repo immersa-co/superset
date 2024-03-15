@@ -8,6 +8,7 @@ import {
   NumberFormatter,
   CurrencyFormatter,
   Currency,
+  SetDataMaskHook,
 } from '@superset-ui/core';
 import { ScaleOrdinal } from 'd3-scale';
 
@@ -69,6 +70,12 @@ export type SupersetPluginChartImmersatableProps =
       allowRearrangeColumns?: boolean;
       filters?: DataRecordFilters;
       includeSearch?: boolean;
+      areaChartCols: string[];
+      rowCount?: number;
+      serverPagination: boolean;
+      serverPaginationData: { pageSize?: number; currentPage?: number };
+      setDataMask: SetDataMaskHook;
+      pageSize?: number;
     };
 
 export type ChartGenericDataItem = Record<string, string | number>;

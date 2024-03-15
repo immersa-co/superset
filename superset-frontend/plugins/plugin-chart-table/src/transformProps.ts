@@ -262,6 +262,11 @@ const transformProps = (
   const columnColorFormatters =
     getColorFormatters(conditionalFormatting, data) ?? defaultColorFormatters;
 
+  console.log(
+    'page size props',
+    getPageSize(pageLength, data.length, columns.length),
+  );
+
   return {
     height,
     width,

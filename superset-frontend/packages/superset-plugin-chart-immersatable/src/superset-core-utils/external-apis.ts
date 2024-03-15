@@ -16,19 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import buildQuery from '../../src/plugin/superset-core/buildQuery';
 
-describe('SupersetPluginChartImmersatable buildQuery', () => {
-  const formData = {
-    datasource: '5__table',
-    granularity_sqla: 'ds',
-    series: 'foo',
-    viz_type: 'my_chart',
-  };
+import { SetDataMaskHook } from '@superset-ui/core';
 
-  it('should build groupby with series in form data', () => {
-    const queryContext = buildQuery(formData);
-    const [query] = queryContext.queries;
-    expect(query.columns).toEqual(['foo']);
+export const updateExternalFormData = (
+  setDataMask: SetDataMaskHook = () => {},
+  pageNumber: number,
+  pageSize: number,
+) =>
+  setDataMask({
+    ownState: {
+      currentPage: pageNumber,
+      pageSize,
+    },
   });
-});
