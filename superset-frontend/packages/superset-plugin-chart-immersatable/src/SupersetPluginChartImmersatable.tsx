@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useCallback,
   useState,
+  memo,
 } from 'react';
 import { DataRecordValue } from '@superset-ui/core';
 import { ColumnWithLooseAccessor } from 'react-table';
@@ -108,21 +109,21 @@ export default function SupersetPluginChartImmersatable(
             ].join(' '),
           };
 
-          const isChartData = checkChartData(text);
-          if (isChartData) {
-            const chartData = JSON.parse(text).map((row: any) => ({
+          const chartData = checkChartData(text);
+          if (chartData) {
+            const parsedChartData = chartData.map((row: any) => ({
               xAxis: row[0],
               yAxis: row[1],
             }));
 
             const ChartComponent = areaChartCols.includes(label)
-              ? AreaChart
-              : LineSeriesChart;
+              ? memo(AreaChart)
+              : memo(LineSeriesChart);
 
             return (
               <div {...cellProps} style={commonStyle}>
                 <ChartComponent
-                  chartData={chartData as ChartData}
+                  chartData={parsedChartData as ChartData}
                   height={50}
                 />
               </div>
