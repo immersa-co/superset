@@ -9,7 +9,7 @@ import {
   sharedControls,
   ControlPanelsContainerProps,
 } from '@superset-ui/chart-controls';
-import { PAGE_SIZE_OPTIONS } from '../consts';
+import { PAGE_SIZE_OPTIONS } from '../superset-core-utils/consts';
 
 const config: ControlPanelConfig = {
   controlPanelSections: [

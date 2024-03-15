@@ -7,7 +7,7 @@ import React, {
   useCallback,
   useState,
 } from 'react';
-import { DataRecordValue, t, tn } from '@superset-ui/core';
+import { DataRecordValue } from '@superset-ui/core';
 import { ColumnWithLooseAccessor } from 'react-table';
 import {
   ChartData,
@@ -17,66 +17,19 @@ import {
 import { AreaChart, DataTable, LineSeriesChart } from './components';
 import { Styles } from './Styles';
 import { checkChartData, processCustomData } from './utils';
-import { formatColumnValue, getSharedStyle } from './superset-core-utils';
-import { SearchInputProps } from './components/DataTable/GlobalFilter';
-import { PAGE_SIZE_OPTIONS } from './consts';
-import { updateExternalFormData } from './superset-core-utils/externalAPIs';
 import {
-  SelectPageSizeRendererProps,
+  PAGE_SIZE_OPTIONS,
+  formatColumnValue,
+  getSharedStyle,
+  updateExternalFormData,
+} from './superset-core-utils';
+import {
+  SelectPageSize,
   SizeOption,
-} from './components/DataTable/SelectPageSize';
+  SearchInput,
+} from './components/superset-core';
 
 const DEFAULT_WIDTH = '200px';
-
-function SearchInput({ count, value, onChange }: SearchInputProps) {
-  return (
-    <span
-      className="dt-global-filter"
-      style={{ display: 'flex', alignItems: 'center' }}
-    >
-      {t('Search')}{' '}
-      <input
-        className="form-control input-sm"
-        placeholder={tn('search.num_records', count)}
-        value={value}
-        onChange={onChange}
-        style={{ marginLeft: '10px' }}
-      />
-    </span>
-  );
-}
-
-function SelectPageSize({
-  options,
-  current,
-  onChange,
-}: SelectPageSizeRendererProps) {
-  return (
-    <span className="dt-select-page-size form-inline">
-      {t('page_size.show')}{' '}
-      <select
-        className="form-control input-sm"
-        value={current}
-        onBlur={() => {}}
-        onChange={e => {
-          onChange(Number((e.target as HTMLSelectElement).value));
-        }}
-      >
-        {options.map(option => {
-          const [size, text] = Array.isArray(option)
-            ? option
-            : [option, option];
-          return (
-            <option key={size} value={size}>
-              {text}
-            </option>
-          );
-        })}
-      </select>{' '}
-      {t('page_size.entries')}
-    </span>
-  );
-}
 
 export default function SupersetPluginChartImmersatable(
   props: SupersetPluginChartImmersatableProps,
@@ -102,8 +55,6 @@ export default function SupersetPluginChartImmersatable(
     serverPaginationData,
     setDataMask,
   } = props;
-
-  console.log('rowCount', rowCount);
 
   const [columnOrderToggle, setColumnOrderToggle] = useState(false);
 

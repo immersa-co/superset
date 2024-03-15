@@ -98,3 +98,35 @@ export default React.memo(function SelectPageSize({
     <SelectRenderer current={current} options={options} onChange={onChange} />
   );
 });
+
+export function SelectPageSize({
+  options,
+  current,
+  onChange,
+}: SelectPageSizeRendererProps) {
+  return (
+    <span className="dt-select-page-size form-inline">
+      {t('page_size.show')}{' '}
+      <select
+        className="form-control input-sm"
+        value={current}
+        onBlur={() => {}}
+        onChange={e => {
+          onChange(Number((e.target as HTMLSelectElement).value));
+        }}
+      >
+        {options.map(option => {
+          const [size, text] = Array.isArray(option)
+            ? option
+            : [option, option];
+          return (
+            <option key={size} value={size}>
+              {text}
+            </option>
+          );
+        })}
+      </select>{' '}
+      {t('page_size.entries')}
+    </span>
+  );
+}

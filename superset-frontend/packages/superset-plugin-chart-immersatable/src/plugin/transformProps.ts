@@ -108,11 +108,6 @@ export default function transformProps(chartProps: ChartProps) {
       ? totalQuery?.data[0]
       : undefined;
 
-  console.log(
-    'page size props',
-    getPageSize(pageLength, data.length, columns.length),
-  );
-
   return {
     width,
     height,

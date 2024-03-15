@@ -16,14 +16,16 @@ import { FaSortUp as FaSortAsc } from '@react-icons/all-files/fa/FaSortUp';
 import { TableStyles } from './table-styles';
 import { TableHeaderIcon } from './TableHeaderIcon';
 import { DataType } from '../../types';
-import GlobalFilter, { GlobalFilterProps } from './GlobalFilter';
 import { ContainerStyled, HeaderStyled } from '../../Styles';
-import { PAGE_SIZE_OPTIONS } from '../../consts';
-import SelectPageSize, {
+import SimplePagination from '../superset-core/Pagination';
+import {
+  GlobalFilterProps,
   SelectPageSizeProps,
   SizeOption,
-} from './SelectPageSize';
-import SimplePagination from './Pagination';
+} from '../superset-core';
+import GlobalFilter from '../superset-core/GlobalFilter';
+import SelectPageSize from '../superset-core/SelectPageSize';
+import { PAGE_SIZE_OPTIONS } from '../../superset-core-utils';
 
 const ITEM_SIZE = 70;
 const DEFAULT_WIDTH = '100%';
@@ -69,8 +71,6 @@ export const DataTable = ({
     usePagination,
     useColumnOrder,
   ].flat();
-
-  console.log('initialPageSize', initialPageSize);
 
   const resultsSize = serverPagination ? rowCount : data.length;
 
@@ -183,11 +183,11 @@ export const DataTable = ({
     [headerGroups, onDragStart, onDrop],
   );
 
+  // This code is taken from the superset-core library.
   const paginationStyle: CSSProperties = sticky.height
     ? {}
     : { visibility: 'hidden' };
 
-  console.log('pageSize', pageSize);
   let resultPageCount = pageCount;
   let resultCurrentPageSize = pageSize;
   let resultCurrentPage = pageIndex;
@@ -198,7 +198,6 @@ export const DataTable = ({
     if (!Number.isFinite(resultPageCount)) {
       resultPageCount = 0;
     }
-    console.log('serverPageSize', serverPageSize);
     resultCurrentPageSize = serverPageSize;
     const foundPageSizeIndex = pageSizeOptions.findIndex(
       ([option]) => option >= resultCurrentPageSize,
@@ -210,8 +209,6 @@ export const DataTable = ({
     resultOnPageChange = (pageNumber: number) =>
       onServerPaginationChange(pageNumber, serverPageSize);
   }
-
-  console.log('resultCurrentPageSize', resultCurrentPageSize);
 
   return (
     <>

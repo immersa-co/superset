@@ -81,7 +81,6 @@ export default React.memo(
     }: PaginationProps,
     ref: React.Ref<HTMLDivElement>,
   ) {
-    console.log('currentPage', currentPage);
     const pageItems = generatePageItems(
       pageCount,
       currentPage,
