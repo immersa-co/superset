@@ -117,8 +117,8 @@ export default function SupersetPluginChartImmersatable(
             }));
 
             const ChartComponent = areaChartCols.includes(label)
-              ? memo(AreaChart)
-              : memo(LineSeriesChart);
+              ? AreaChart
+              : LineSeriesChart;
 
             return (
               <div {...cellProps} style={commonStyle}>
@@ -215,7 +215,7 @@ export default function SupersetPluginChartImmersatable(
         serverPaginationData={serverPaginationData}
         onServerPaginationChange={handleServerPaginationChange}
         selectPageSize={pageSize !== null && SelectPageSize}
-        maxPageItemCount={width > 340 ? 9 : 7}
+        maxPageItemCount={width > 340 ? 9 : 7} // TODO: handle the harcoded values.
       />
     </Styles>
   );
