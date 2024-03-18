@@ -1,7 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable theme-colors/no-literal-colors */
-// TODO: refactor the whole component. It's too big and complex.
-import React, { CSSProperties, useMemo, useRef, memo } from 'react';
+import React, {
+  CSSProperties,
+  useMemo,
+  useRef,
+  memo,
+  useCallback,
+  useState,
+} from 'react';
 import {
   ColumnWithLooseAccessor,
   useSortBy,
@@ -12,22 +18,18 @@ import {
   usePagination,
 } from 'react-table';
 import { FixedSizeList as List } from 'react-window';
-import { FaSortDown as FaSortDesc } from '@react-icons/all-files/fa/FaSortDown';
-import { FaSortUp as FaSortAsc } from '@react-icons/all-files/fa/FaSortUp';
 import { TableStyles } from './table-styles';
-import { TableHeaderIcon } from './TableHeaderIcon';
 import { DataType } from '../../types';
 import { ContainerStyled, HeaderStyled } from '../../Styles';
-import SimplePagination from '../superset-core/Pagination';
 import {
   GlobalFilterProps,
-  SelectPageSizeProps,
   SizeOption,
+  GlobalFilter,
+  SelectPageSize,
+  SimplePagination,
 } from '../superset-core';
-import GlobalFilter from '../superset-core/GlobalFilter';
-import SelectPageSize from '../superset-core/SelectPageSize';
 import { PAGE_SIZE_OPTIONS } from '../../superset-core-utils';
-// TODO: barrel import for all the superset-core folder
+import { HeaderGroups } from './HeaderGroup';
 
 const ITEM_SIZE = 70;
 const DEFAULT_WIDTH = '100%';
@@ -48,7 +50,6 @@ export const DataTable = memo(
     data,
     serverPaginationData,
     onServerPaginationChange,
-    selectPageSize,
     maxPageItemCount = 9,
   }: {
     columns: ColumnWithLooseAccessor<any>[];
@@ -65,9 +66,10 @@ export const DataTable = memo(
     data: DataType[];
     serverPaginationData: { pageSize?: number; currentPage?: number };
     onServerPaginationChange: (pageNumber: number, pageSize: number) => void;
-    selectPageSize?: boolean | SelectPageSizeProps['selectRenderer'];
     maxPageItemCount?: number;
   }) => {
+    const [columnBeingDragged, setColumnBeingDragged] = useState(-1);
+
     const tableHooks: PluginHook<any>[] = [
       useGlobalFilter,
       useSortBy,
@@ -75,10 +77,16 @@ export const DataTable = memo(
       useColumnOrder,
     ].flat();
 
-    const resultsSize = serverPagination ? rowCount : data.length;
+    const memoizedTableProperties = useMemo(() => {
+      const resultsSize = serverPagination ? rowCount : data.length;
+      const hasPagination = initialPageSize > 0 && resultsSize > 0;
+      const hasGlobalControl = hasPagination || !!searchInput;
 
-    const hasPagination = initialPageSize > 0 && 1 > 0; // TODO: review th condition
-    const hasGlobalControl = hasPagination || !!searchInput;
+      return { resultsSize, hasPagination, hasGlobalControl };
+    }, [serverPagination, rowCount, data.length, initialPageSize, searchInput]);
+
+    const { resultsSize, hasPagination, hasGlobalControl } =
+      memoizedTableProperties;
 
     const globalControlRef = useRef<HTMLDivElement>(null);
     const paginationRef = useRef<HTMLDivElement>(null);
@@ -104,24 +112,22 @@ export const DataTable = memo(
       },
       ...tableHooks,
     );
-    // make setPageSize accept 0
-    const setPageSize = (size: number) => {
+    const updatePageSize = (newSize: number) => {
       if (serverPagination) {
-        onServerPaginationChange(0, size);
+        onServerPaginationChange(0, newSize);
       }
-      // keep the original size if data is empty
-      if (size || resultsSize !== 0) {
-        setPageSize_(size === 0 ? resultsSize : size);
+      if (newSize || resultsSize !== 0) {
+        setPageSize_(newSize === 0 ? resultsSize : newSize);
       }
     };
 
-    let columnBeingDragged = -1;
     const onDragStart = (e: React.DragEvent) => {
       const el = e.target as HTMLTableCellElement;
-      columnBeingDragged = allColumns.findIndex(
+      const newColumnBeingDragged = allColumns.findIndex(
         col => col.id === el.dataset.columnName,
       );
-      e.dataTransfer.setData('text/plain', `${columnBeingDragged}`);
+      setColumnBeingDragged(newColumnBeingDragged);
+      e.dataTransfer.setData('text/plain', `${newColumnBeingDragged}`);
     };
 
     const onDrop = (e: React.DragEvent) => {
@@ -135,125 +141,99 @@ export const DataTable = memo(
         const colToBeMoved = currentCols.splice(columnBeingDragged, 1);
         currentCols.splice(newPosition, 0, colToBeMoved[0]);
         setColumnOrder(currentCols);
-        // toggle value in TableChart to trigger column width recalc
         onColumnOrderChange();
       }
       e.preventDefault();
     };
 
-    // TODO: headerGroups should be a separated component.
     const renderedHeaderGroups = useMemo(
-      () =>
-        headerGroups.map(headerGroup => (
-          <TableStyles.HeaderGroup
-            {...headerGroup.getHeaderGroupProps()}
-            key={headerGroup.id}
-            style={defaultWidthStyle}
-          >
-            {headerGroup.headers.map(column => (
-              <TableStyles.Header key={column.id}>
-                <div {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  <TableStyles.Column>
-                    <TableStyles.ColumnContent style={defaultWidthStyle}>
-                      {column.render('Header', {
-                        key: column.id,
-                        ...column.getSortByToggleProps(),
-                        onDragStart,
-                        onDrop,
-                      })}
-                    </TableStyles.ColumnContent>
-                    <span>
-                      <TableStyles.Icon>
-                        <TableHeaderIcon
-                          Icon={FaSortAsc}
-                          isActive={column.isSorted && !column.isSortedDesc}
-                          isAbsolute={false}
-                        />
-                        <TableHeaderIcon
-                          Icon={FaSortDesc}
-                          isActive={
-                            (column.isSorted && column.isSortedDesc) || false
-                          }
-                          isAbsolute
-                        />
-                      </TableStyles.Icon>
-                    </span>
-                  </TableStyles.Column>
-                </div>
-              </TableStyles.Header>
-            ))}
-          </TableStyles.HeaderGroup>
-        )),
+      () => (
+        <HeaderGroups
+          headerGroups={headerGroups}
+          defaultWidthStyle={defaultWidthStyle}
+          onDragStart={onDragStart}
+          onDrop={onDrop}
+        />
+      ),
       [headerGroups, onDragStart, onDrop],
     );
 
-    // This code is taken from the superset-core library.
-    const paginationStyle: CSSProperties = sticky.height
-      ? {}
-      : { visibility: 'hidden' };
+    const paginationStyle: CSSProperties = useMemo(
+      () => (sticky.height ? {} : { visibility: 'hidden' }),
+      [sticky.height],
+    );
 
-    let resultPageCount = pageCount;
-    let resultCurrentPageSize = pageSize;
-    let resultCurrentPage = pageIndex;
-    let resultOnPageChange: (page: number) => void = gotoPage;
-    if (serverPagination) {
-      const serverPageSize = serverPaginationData?.pageSize ?? initialPageSize;
-      resultPageCount = Math.ceil(rowCount / serverPageSize);
-      if (!Number.isFinite(resultPageCount)) {
-        resultPageCount = 0;
+    const serverPageSize = useMemo(
+      () => serverPaginationData?.pageSize ?? initialPageSize,
+      [serverPaginationData],
+    );
+
+    const resultPageCount = useMemo(() => {
+      if (serverPagination) {
+        return Math.ceil(rowCount / serverPageSize);
       }
-      resultCurrentPageSize = serverPageSize;
-      const foundPageSizeIndex = pageSizeOptions.findIndex(
-        ([option]) => option >= resultCurrentPageSize,
-      );
-      if (foundPageSizeIndex === -1) {
-        resultCurrentPageSize = 0;
+      return pageCount;
+    }, [serverPagination, rowCount, serverPageSize, pageCount]);
+
+    const resultCurrentPageSize = useMemo(() => {
+      if (serverPagination) {
+        const foundPageSizeIndex = pageSizeOptions.findIndex(
+          ([option]) => option >= serverPageSize,
+        );
+        if (foundPageSizeIndex === -1) {
+          return 0;
+        }
+        return serverPageSize;
       }
-      resultCurrentPage = serverPaginationData?.currentPage ?? 0;
-      resultOnPageChange = (pageNumber: number) =>
-        onServerPaginationChange(pageNumber, serverPageSize);
-    }
+      return pageSize;
+    }, [serverPagination, serverPageSize, pageSizeOptions, pageSize]);
+
+    const resultCurrentPage = useMemo(
+      () =>
+        serverPagination ? serverPaginationData?.currentPage ?? 0 : pageIndex,
+      [serverPagination, serverPaginationData, pageIndex],
+    );
+
+    const resultOnPageChange = useCallback(
+      (pageNumber: number) => {
+        if (serverPagination) {
+          onServerPaginationChange(pageNumber, serverPageSize);
+        } else {
+          gotoPage(pageNumber);
+        }
+      },
+      [serverPagination, onServerPaginationChange, serverPageSize, gotoPage],
+    );
 
     return (
       <>
-        <div>
-          {hasGlobalControl ? (
-            <div ref={globalControlRef} className="form-inline dt-controls">
-              <div className="row">
-                <div className="col-sm-6">
-                  {hasPagination ? (
-                    <SelectPageSize
-                      total={resultsSize}
-                      current={resultCurrentPageSize}
-                      options={pageSizeOptions}
-                      selectRenderer={
-                        typeof selectPageSize === 'boolean'
-                          ? undefined
-                          : selectPageSize
-                      }
-                      onChange={setPageSize}
-                    />
-                  ) : null}
-                </div>
-                {searchInput ? (
-                  <div className="col-sm-6" style={{ marginBottom: '5px' }}>
-                    <GlobalFilter<any>
-                      searchInput={
-                        typeof searchInput === 'boolean'
-                          ? undefined
-                          : searchInput
-                      }
-                      preGlobalFilteredRows={preGlobalFilteredRows}
-                      setGlobalFilter={setGlobalFilter}
-                      filterValue={filterValue}
-                    />
-                  </div>
+        {hasGlobalControl ? (
+          <div ref={globalControlRef} className="form-inline dt-controls">
+            <div className="row">
+              <div className="col-sm-6">
+                {hasPagination ? (
+                  <SelectPageSize
+                    current={resultCurrentPageSize}
+                    options={pageSizeOptions}
+                    onChange={updatePageSize}
+                  />
                 ) : null}
               </div>
+              {searchInput ? (
+                <div className="col-sm-6" style={{ marginBottom: '5px' }}>
+                  <GlobalFilter
+                    searchInput={
+                      typeof searchInput === 'boolean' ? undefined : searchInput
+                    }
+                    preGlobalFilteredRows={preGlobalFilteredRows}
+                    setGlobalFilter={setGlobalFilter}
+                    filterValue={filterValue}
+                  />
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
-
+          </div>
+        ) : null}
         <ContainerStyled>
           <HeaderStyled>{headerText}</HeaderStyled>
           <div {...getTableProps()}>{renderedHeaderGroups}</div>
@@ -285,19 +265,16 @@ export const DataTable = memo(
             </List>
           </div>
         </ContainerStyled>
-
-        <div>
-          {hasPagination && resultPageCount > 1 ? (
-            <SimplePagination
-              ref={paginationRef}
-              style={paginationStyle}
-              maxPageItemCount={maxPageItemCount}
-              pageCount={resultPageCount}
-              currentPage={resultCurrentPage}
-              onPageChange={resultOnPageChange}
-            />
-          ) : null}
-        </div>
+        {hasPagination && resultPageCount > 1 ? (
+          <SimplePagination
+            ref={paginationRef}
+            style={paginationStyle}
+            maxPageItemCount={maxPageItemCount}
+            pageCount={resultPageCount}
+            currentPage={resultCurrentPage}
+            onPageChange={resultOnPageChange}
+          />
+        ) : null}
       </>
     );
   },

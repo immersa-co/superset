@@ -28,8 +28,6 @@ export interface SearchInputProps {
 
 export interface GlobalFilterProps<D extends object> {
   preGlobalFilteredRows: Row<D>[];
-  // filter value cannot be `undefined` otherwise React will report component
-  // control type undefined error
   filterValue: string;
   setGlobalFilter: (filterValue: FilterValue) => void;
   searchInput?: ComponentType<SearchInputProps>;
@@ -49,9 +47,7 @@ function DefaultSearchInput({ count, value, onChange }: SearchInputProps) {
   );
 }
 
-export default (React.memo as <T>(fn: T) => T)(function GlobalFilter<
-  D extends object,
->({
+export const GlobalFilter = React.memo(function GlobalFilter<D extends object>({
   preGlobalFilteredRows,
   filterValue = '',
   searchInput,
