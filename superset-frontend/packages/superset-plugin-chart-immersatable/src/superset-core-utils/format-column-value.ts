@@ -6,7 +6,7 @@ import {
   sanitizeHtml,
 } from '@superset-ui/core';
 import { DataColumnMeta } from '../types';
-import DateWithFormatter from './date-with-formatter';
+import { DateWithFormatter } from './date-with-formatter';
 
 function formatValue(
   formatter: DataColumnMeta['formatter'],

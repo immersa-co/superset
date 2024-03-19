@@ -1,4 +1,4 @@
-import React, { memo, useMemo, CSSProperties, DragEvent } from 'react';
+import React, { memo, CSSProperties, DragEvent } from 'react';
 import { HeaderGroup } from 'react-table';
 import { FaSortUp as FaSortAsc } from '@react-icons/all-files/fa/FaSortUp';
 import { FaSortDown as FaSortDesc } from '@react-icons/all-files/fa/FaSortDown';
@@ -18,51 +18,48 @@ export const HeaderGroups = memo(
     defaultWidthStyle,
     onDragStart,
     onDrop,
-  }: HeaderGroupProps) => {
-    const renderedHeaderGroups = useMemo(
-      () =>
-        headerGroups.map((headerGroup: HeaderGroup<object>) => (
-          <TableStyles.HeaderGroup
-            {...headerGroup.getHeaderGroupProps()}
-            key={headerGroup.id}
-            style={defaultWidthStyle}
-          >
-            {headerGroup.headers.map(column => (
-              <TableStyles.Header key={column.id}>
-                <div {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  <TableStyles.Column>
-                    <TableStyles.ColumnContent style={defaultWidthStyle}>
-                      {column.render('Header', {
-                        key: column.id,
-                        ...column.getSortByToggleProps(),
-                        onDragStart,
-                        onDrop,
-                      })}
-                    </TableStyles.ColumnContent>
-                    <span>
-                      <TableStyles.Icon>
-                        <TableHeaderIcon
-                          Icon={FaSortAsc}
-                          isActive={column.isSorted && !column.isSortedDesc}
-                          isAbsolute={false}
-                        />
-                        <TableHeaderIcon
-                          Icon={FaSortDesc}
-                          isActive={
-                            (column.isSorted && column.isSortedDesc) || false
-                          }
-                          isAbsolute
-                        />
-                      </TableStyles.Icon>
-                    </span>
-                  </TableStyles.Column>
-                </div>
-              </TableStyles.Header>
-            ))}
-          </TableStyles.HeaderGroup>
-        )),
-      [defaultWidthStyle, headerGroups, onDragStart, onDrop],
-    );
-    return renderedHeaderGroups;
-  },
+  }: HeaderGroupProps) => (
+    <>
+      {headerGroups.map((headerGroup: HeaderGroup<object>) => (
+        <TableStyles.HeaderGroup
+          {...headerGroup.getHeaderGroupProps()}
+          key={headerGroup.id}
+          style={defaultWidthStyle}
+        >
+          {headerGroup.headers.map(column => (
+            <TableStyles.Header key={column.id}>
+              <div {...column.getHeaderProps(column.getSortByToggleProps())}>
+                <TableStyles.Column>
+                  <TableStyles.ColumnContent style={defaultWidthStyle}>
+                    {column.render('Header', {
+                      key: column.id,
+                      ...column.getSortByToggleProps(),
+                      onDragStart,
+                      onDrop,
+                    })}
+                  </TableStyles.ColumnContent>
+                  <span>
+                    <TableStyles.Icon>
+                      <TableHeaderIcon
+                        Icon={FaSortAsc}
+                        isActive={column.isSorted && !column.isSortedDesc}
+                        isAbsolute={false}
+                      />
+                      <TableHeaderIcon
+                        Icon={FaSortDesc}
+                        isActive={
+                          (column.isSorted && column.isSortedDesc) || false
+                        }
+                        isAbsolute
+                      />
+                    </TableStyles.Icon>
+                  </span>
+                </TableStyles.Column>
+              </div>
+            </TableStyles.Header>
+          ))}
+        </TableStyles.HeaderGroup>
+      ))}
+    </>
+  ),
 );

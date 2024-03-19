@@ -12,6 +12,12 @@ import {
 } from '@superset-ui/core';
 import { ScaleOrdinal } from 'd3-scale';
 
+export enum HorizontalAlign {
+  Left = 'left',
+  Right = 'right',
+  Center = 'center',
+}
+
 export type SupersetPluginChartImmersatableStylesProps = {
   height: number;
   width: number;
@@ -34,7 +40,7 @@ export type TableColumnConfig = {
   d3SmallNumberFormat?: string;
   d3TimeFormat?: string;
   columnWidth?: number;
-  horizontalAlign?: 'left' | 'right' | 'center';
+  horizontalAlign?: HorizontalAlign;
   showCellBars?: boolean;
   alignPositiveNegative?: boolean;
   colorPositiveNegative?: boolean;
@@ -78,10 +84,6 @@ export type SupersetPluginChartImmersatableProps =
       pageSize?: number;
     };
 
-export type ChartGenericDataItem = Record<string, string | number>;
-
-export type ChartGenericData = ChartGenericDataItem[];
-
 export type ChartDataItem = {
   xAxis: string | number;
   yAxis: number;
@@ -105,7 +107,6 @@ export type ChartMargin = {
   bottom: number;
   left: number;
 };
-export type ChartDataType = 'date' | 'string' | 'number';
 
 export type DataType = Record<string, unknown>;
 
