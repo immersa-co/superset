@@ -77,7 +77,7 @@ export const DataTable = memo(
       useColumnOrder,
     ].flat();
 
-    const memoizedTableProperties = useMemo(() => {
+    const tableProperties = useMemo(() => {
       const resultsSize = serverPagination ? rowCount : data.length;
       const hasPagination = initialPageSize > 0 && resultsSize > 0;
       const hasGlobalControl = hasPagination || !!searchInput;
@@ -85,8 +85,7 @@ export const DataTable = memo(
       return { resultsSize, hasPagination, hasGlobalControl };
     }, [serverPagination, rowCount, data.length, initialPageSize, searchInput]);
 
-    const { resultsSize, hasPagination, hasGlobalControl } =
-      memoizedTableProperties;
+    const { resultsSize, hasPagination, hasGlobalControl } = tableProperties;
 
     const globalControlRef = useRef<HTMLDivElement>(null);
     const paginationRef = useRef<HTMLDivElement>(null);
@@ -104,7 +103,7 @@ export const DataTable = memo(
       state: { pageIndex, pageSize, globalFilter: filterValue, sticky = {} },
       pageCount,
       gotoPage,
-      setPageSize: setPageSize_,
+      setPageSize,
     } = useTable<DataType>(
       {
         columns,
@@ -112,50 +111,46 @@ export const DataTable = memo(
       },
       ...tableHooks,
     );
-    const updatePageSize = (newSize: number) => {
-      if (serverPagination) {
-        onServerPaginationChange(0, newSize);
-      }
-      if (newSize || resultsSize !== 0) {
-        setPageSize_(newSize === 0 ? resultsSize : newSize);
-      }
-    };
+    const updatePageSize = useCallback(
+      (newSize: number) => {
+        if (serverPagination) {
+          onServerPaginationChange(0, newSize);
+        }
+        if (newSize || resultsSize !== 0) {
+          setPageSize(newSize === 0 ? resultsSize : newSize);
+        }
+      },
+      [serverPagination, onServerPaginationChange, resultsSize, setPageSize],
+    );
 
-    const onDragStart = (e: React.DragEvent) => {
-      const el = e.target as HTMLTableCellElement;
-      const newColumnBeingDragged = allColumns.findIndex(
-        col => col.id === el.dataset.columnName,
-      );
-      setColumnBeingDragged(newColumnBeingDragged);
-      e.dataTransfer.setData('text/plain', `${newColumnBeingDragged}`);
-    };
+    const onDragStart = useCallback(
+      (e: React.DragEvent) => {
+        const el = e.target as HTMLTableCellElement;
+        const newColumnBeingDragged = allColumns.findIndex(
+          col => col.id === el.dataset.columnName,
+        );
+        setColumnBeingDragged(newColumnBeingDragged);
+        e.dataTransfer.setData('text/plain', `${newColumnBeingDragged}`);
+      },
+      [allColumns],
+    );
 
-    const onDrop = (e: React.DragEvent) => {
-      const el = e.target as HTMLTableCellElement;
-      const newPosition = allColumns.findIndex(
-        col => col.id === el.dataset.columnName,
-      );
-
-      if (newPosition !== -1) {
-        const currentCols = allColumns.map(c => c.id);
-        const colToBeMoved = currentCols.splice(columnBeingDragged, 1);
-        currentCols.splice(newPosition, 0, colToBeMoved[0]);
-        setColumnOrder(currentCols);
-        onColumnOrderChange();
-      }
-      e.preventDefault();
-    };
-
-    const renderedHeaderGroups = useMemo(
-      () => (
-        <HeaderGroups
-          headerGroups={headerGroups}
-          defaultWidthStyle={defaultWidthStyle}
-          onDragStart={onDragStart}
-          onDrop={onDrop}
-        />
-      ),
-      [headerGroups, onDragStart, onDrop],
+    const onDrop = useCallback(
+      (e: React.DragEvent) => {
+        const el = e.target as HTMLTableCellElement;
+        const newPosition = allColumns.findIndex(
+          col => col.id === el.dataset.columnName,
+        );
+        if (newPosition !== -1) {
+          const currentCols = allColumns.map(c => c.id);
+          const colToBeMoved = currentCols.splice(columnBeingDragged, 1);
+          currentCols.splice(newPosition, 0, colToBeMoved[0]);
+          setColumnOrder(currentCols);
+          onColumnOrderChange();
+        }
+        e.preventDefault();
+      },
+      [allColumns, columnBeingDragged, onColumnOrderChange],
     );
 
     const paginationStyle: CSSProperties = useMemo(
@@ -236,7 +231,14 @@ export const DataTable = memo(
         ) : null}
         <ContainerStyled>
           <HeaderStyled>{headerText}</HeaderStyled>
-          <div {...getTableProps()}>{renderedHeaderGroups}</div>
+          <div {...getTableProps()}>
+            <HeaderGroups
+              headerGroups={headerGroups}
+              defaultWidthStyle={defaultWidthStyle}
+              onDragStart={onDragStart}
+              onDrop={onDrop}
+            />
+          </div>
           <div {...getTableBodyProps()}>
             <List
               height={rows.length * ITEM_SIZE}
