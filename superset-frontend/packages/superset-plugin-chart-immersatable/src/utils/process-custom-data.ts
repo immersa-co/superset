@@ -17,7 +17,7 @@ const filterDataByDateInterval = (
   });
 
 export const processCustomData = (
-  myData: CustomData[],
+  sourceData: CustomData[],
   timeRangeCols: string[] = [],
   timeSinceUntil: {
     startDate: Date;
@@ -25,31 +25,31 @@ export const processCustomData = (
   },
 ) => {
   const { startDate, endDate } = timeSinceUntil;
-  return myData.map(customdata => {
-    const updatedCustomData = { ...customdata };
+  return sourceData.map(dataItem => {
+    const updatedCustomData = { ...dataItem };
     const keysArray = Object.keys(updatedCustomData);
     // eslint-disable-next-line no-restricted-syntax
-    for (const item of keysArray) {
-      const value = updatedCustomData[item];
-      const isItemInTimeRangeCols = timeRangeCols.includes(item);
-      const isDateRangeDefined = startDate && endDate;
-      const isValueArrayString =
-        typeof value === 'string' &&
-        value.startsWith('[[') &&
-        value.endsWith(']]');
-      const parsedValue = isValueArrayString ? JSON.parse(value) : null;
+    for (const key of keysArray) {
+      const propertyValue = updatedCustomData[key];
+      const isTimeRangeColumn = timeRangeCols.includes(key);
+      const hasDateRange = startDate && endDate;
+      const isArrayString =
+        typeof propertyValue === 'string' &&
+        propertyValue.startsWith('[[') &&
+        propertyValue.endsWith(']]');
+      const parsedArray = isArrayString ? JSON.parse(propertyValue) : null;
       if (
-        isItemInTimeRangeCols &&
-        isDateRangeDefined &&
-        isValueArrayString &&
-        Array.isArray(parsedValue)
+        isTimeRangeColumn &&
+        hasDateRange &&
+        isArrayString &&
+        Array.isArray(parsedArray)
       ) {
         const filteredData = filterDataByDateInterval(
-          parsedValue,
+          parsedArray,
           startDate,
           endDate,
         );
-        updatedCustomData[item] = JSON.stringify(filteredData);
+        updatedCustomData[key] = JSON.stringify(filteredData);
       }
     }
     return updatedCustomData;

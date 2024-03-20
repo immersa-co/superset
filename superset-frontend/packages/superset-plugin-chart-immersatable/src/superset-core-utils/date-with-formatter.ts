@@ -26,7 +26,7 @@ import {
  * Extended Date object with a custom formatter, and retains the original input
  * when the formatter is simple `String(..)`.
  */
-export default class DateWithFormatter extends Date {
+export class DateWithFormatter extends Date {
   formatter: TimeFormatFunction;
 
   input: DataRecordValue;

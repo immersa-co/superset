@@ -6,10 +6,12 @@ import {
   QueryMode,
 } from '@superset-ui/core';
 import memoizeOne from 'memoize-one';
-import { getSinceUntil } from '../utils';
-import { processColumns } from '../superset-core-utils';
+import {
+  getSinceUntil,
+  processColumns,
+  DateWithFormatter,
+} from '../superset-core-utils';
 import { DataColumnMeta } from '../types';
-import DateWithFormatter from '../superset-core-utils/date-with-formatter';
 
 const processDataRecords = memoizeOne(function processDataRecords(
   data: DataRecord[] | undefined,
@@ -90,15 +92,11 @@ export default function transformProps(chartProps: ChartProps) {
 
   const [metrics, percentMetrics, columns] = processColumns(chartProps as any);
 
-  let baseQuery;
-  let countQuery;
-  let totalQuery;
   let rowCount;
+  const [baseQuery, countQuery, totalQuery] = queriesData;
   if (serverPagination) {
-    [baseQuery, countQuery, totalQuery] = queriesData;
     rowCount = (countQuery?.data?.[0]?.rowcount as number) ?? 0;
   } else {
-    [baseQuery, totalQuery] = queriesData;
     rowCount = baseQuery?.rowcount ?? 0;
   }
 
@@ -107,6 +105,10 @@ export default function transformProps(chartProps: ChartProps) {
     showTotals && queryMode === QueryMode.aggregate
       ? totalQuery?.data[0]
       : undefined;
+
+  const pageSize = serverPagination
+    ? serverPageLength
+    : getPageSize(pageLength, data.length, columns.length);
 
   return {
     width,
@@ -133,9 +135,7 @@ export default function transformProps(chartProps: ChartProps) {
     serverPaginationData: serverPagination
       ? serverPaginationData
       : defaultServerPaginationData,
-    pageSize: serverPagination
-      ? serverPageLength
-      : getPageSize(pageLength, data.length, columns.length),
+    pageSize,
     rowCount,
     setDataMask,
     totals,

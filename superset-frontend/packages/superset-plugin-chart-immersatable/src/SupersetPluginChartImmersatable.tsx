@@ -6,7 +6,6 @@ import React, {
   useMemo,
   useCallback,
   useState,
-  memo,
 } from 'react';
 import { DataRecordValue } from '@superset-ui/core';
 import { ColumnWithLooseAccessor } from 'react-table';
@@ -24,13 +23,12 @@ import {
   getSharedStyle,
   updateExternalFormData,
 } from './superset-core-utils';
-import {
-  SelectPageSize,
-  SizeOption,
-  SearchInput,
-} from './components/superset-core';
+import { SizeOption, SearchInput } from './components/superset-core';
 
 const DEFAULT_WIDTH = '200px';
+const PAGE_ITEM_COUNT_WIDE = 9;
+const PAGE_ITEM_COUNT_NARROW = 7;
+const WIDTH_BREAKPOINT = 340;
 
 export default function SupersetPluginChartImmersatable(
   props: SupersetPluginChartImmersatableProps,
@@ -59,7 +57,6 @@ export default function SupersetPluginChartImmersatable(
 
   const [columnOrderToggle, setColumnOrderToggle] = useState(false);
 
-  // only take relevant page size options
   const pageSizeOptions = useMemo(() => {
     const getServerPagination = (n: number) => n <= rowCount;
     return PAGE_SIZE_OPTIONS.filter(([n]) =>
@@ -100,7 +97,6 @@ export default function SupersetPluginChartImmersatable(
           const text = formattedColumnValue[1];
 
           const cellProps = {
-            // show raw number in title in case of numeric values
             title: typeof value === 'number' ? String(value) : undefined,
             className: [
               className,
@@ -214,8 +210,11 @@ export default function SupersetPluginChartImmersatable(
         data={data}
         serverPaginationData={serverPaginationData}
         onServerPaginationChange={handleServerPaginationChange}
-        selectPageSize={pageSize !== null && SelectPageSize}
-        maxPageItemCount={width > 340 ? 9 : 7} // TODO: handle the harcoded values.
+        maxPageItemCount={
+          width > WIDTH_BREAKPOINT
+            ? PAGE_ITEM_COUNT_WIDE
+            : PAGE_ITEM_COUNT_NARROW
+        }
       />
     </Styles>
   );

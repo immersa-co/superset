@@ -44,6 +44,6 @@ export const HeaderStyled = styled(baseStyle)`
   border-top-right-radius: 1rem;
   background: #f3f4f6;
   font-size: 1.4rem;
-  font-weight: bold !important;
+  font-weight: bold;
   color: rgb(107, 114, 128);
 `;
