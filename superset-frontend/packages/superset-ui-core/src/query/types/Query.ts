@@ -69,6 +69,8 @@ export type QueryObjectExtras = Partial<{
   time_grain_sqla?: TimeGranularity;
   /** WHERE condition */
   where?: string;
+  /** Instant Time Comparison */
+  instant_time_comparison_range?: string;
 }>;
 
 export type ResidualQueryObjectData = {
@@ -328,6 +330,7 @@ export type Query = {
   actions: Record<string, any>;
   type: DatasourceType;
   columns: QueryColumn[];
+  runAsync?: boolean;
 };
 
 export type QueryResults = {

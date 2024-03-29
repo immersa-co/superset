@@ -91,12 +91,11 @@ DB_CONNECTION_MUTATOR = config["DB_CONNECTION_MUTATOR"]
 
 
 class KeyValue(Model):  # pylint: disable=too-few-public-methods
-
     """Used for any type of key-value store"""
 
     __tablename__ = "keyvalue"
     id = Column(Integer, primary_key=True)
-    value = Column(Text, nullable=False)
+    value = Column(utils.MediumText(), nullable=False)
 
 
 class CssTemplate(Model, AuditMixinNullable):
@@ -105,7 +104,7 @@ class CssTemplate(Model, AuditMixinNullable):
     __tablename__ = "css_templates"
     id = Column(Integer, primary_key=True)
     template_name = Column(String(250))
-    css = Column(Text, default="")
+    css = Column(utils.MediumText(), default="")
 
 
 class ConfigurationMethod(StrEnum):
@@ -116,7 +115,6 @@ class ConfigurationMethod(StrEnum):
 class Database(
     Model, AuditMixinNullable, ImportExportMixin
 ):  # pylint: disable=too-many-public-methods
-
     """An ORM object that stores Database related information"""
 
     __tablename__ = "dbs"
@@ -230,6 +228,11 @@ class Database(
         return self.get_extra().get("disable_data_preview", False) is True
 
     @property
+    def disable_drill_to_detail(self) -> bool:
+        # this will prevent any 'trash value' strings from going through
+        return self.get_extra().get("disable_drill_to_detail", False) is True
+
+    @property
     def schema_options(self) -> dict[str, Any]:
         """Additional schema display config for engines with complex schemas"""
         return self.get_extra().get("schema_options", {})
@@ -248,6 +251,7 @@ class Database(
             "schema_options": self.schema_options,
             "parameters": self.parameters,
             "disable_data_preview": self.disable_data_preview,
+            "disable_drill_to_detail": self.disable_drill_to_detail,
             "parameters_schema": self.parameters_schema,
             "engine_information": self.engine_information,
         }
