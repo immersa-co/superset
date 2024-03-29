@@ -288,8 +288,10 @@ APP_NAME = "Superset"
 # Specify the App icon
 APP_ICON = "/static/assets/images/superset-logo-horiz.png"
 
-# Specify where clicking the logo would take the user
-# e.g. setting it to '/' would take the user to '/superset/welcome/'
+# Specify where clicking the logo would take the user'
+# Default value of None will take you to '/superset/welcome'
+# You can also specify a relative URL e.g. '/superset/welcome' or '/dashboards/list'
+# or you can specify a full URL e.g. 'https://foo.bar'
 LOGO_TARGET_PATH = None
 
 # Specify tooltip that should appear when hovering over the App Icon/Logo
@@ -1293,7 +1295,7 @@ ALERT_REPORTS_WORKING_SOFT_TIME_OUT_LAG = int(timedelta(seconds=1).total_seconds
 # Default values that user using when creating alert
 ALERT_REPORTS_DEFAULT_WORKING_TIMEOUT = 3600
 ALERT_REPORTS_DEFAULT_RETENTION = 90
-ALERT_REPORTS_DEFAULT_CRON_VALUE = "0 * * * *"  # every hour
+ALERT_REPORTS_DEFAULT_CRON_VALUE = "0 0 * * *"  # every day
 # If set to true no notification is sent, the worker will just log a message.
 # Useful for debugging
 ALERT_REPORTS_NOTIFICATION_DRY_RUN = False

@@ -45,10 +45,7 @@ import {
   NotificationFormats,
 } from 'src/features/reports/types';
 import { reportSelector } from 'src/views/CRUD/hooks';
-import {
-  TRANSLATIONS,
-  StyledInputContainer,
-} from 'src/features/alerts/AlertReportModal';
+import { StyledInputContainer } from 'src/features/alerts/AlertReportModal';
 import { CreationMethod } from './HeaderReportDropdown';
 import {
   antDErrorAlertStyles,
@@ -270,14 +267,14 @@ function ReportModal({
   const renderCustomWidthSection = (
     <StyledInputContainer>
       <div className="control-label" css={CustomWidthHeaderStyle}>
-        {TRANSLATIONS.CUSTOM_SCREENSHOT_WIDTH_TEXT}
+        {t('Screenshot width')}
       </div>
       <div className="input-container">
         <Input
           type="number"
           name="custom_width"
           value={currentReport?.custom_width || ''}
-          placeholder={TRANSLATIONS.CUSTOM_SCREENSHOT_WIDTH_PLACEHOLDER_TEXT}
+          placeholder={t('Input custom width in pixels')}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             setCurrentReport({
               custom_width: parseInt(event.target.value, 10) || null,
@@ -334,9 +331,7 @@ function ReportModal({
           <h4 css={(theme: SupersetTheme) => SectionHeaderStyle(theme)}>
             {t('Schedule')}
           </h4>
-          <p>
-            {t('A screenshot of the dashboard will be sent to your email at')}
-          </p>
+          <p>{t('The report will be sent to your email at')}</p>
         </StyledScheduleTitle>
 
         <StyledCronPicker

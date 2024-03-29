@@ -64,7 +64,7 @@ def copy_dashboard(_mapper: Mapper, _connection: Connection, target: Dashboard) 
     if dashboard_id is None:
         return
 
-    session = sqla.inspect(target).session
+    session = sqla.inspect(target).session  # pylint: disable=disallowed-name
     new_user = session.query(User).filter_by(id=target.id).first()
 
     # copy template dashboard to user
@@ -137,7 +137,7 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
     dashboard_title = Column(String(500))
     position_json = Column(utils.MediumText())
     description = Column(Text)
-    css = Column(Text)
+    css = Column(utils.MediumText())
     certified_by = Column(Text)
     certification_details = Column(Text)
     json_metadata = Column(utils.MediumText())
@@ -365,8 +365,11 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
             copied_dashboard.alter_params(remote_id=dashboard_id)
             copied_dashboards.append(copied_dashboard)
 
+        datasource_id_list = list(datasource_ids)
+        datasource_id_list.sort()
+
         eager_datasources = []
-        for datasource_id, _ in datasource_ids:
+        for datasource_id, _ in datasource_id_list:
             eager_datasource = SqlaTable.get_eager_sqlatable_datasource(datasource_id)
             copied_datasource = eager_datasource.copy()
             copied_datasource.alter_params(
