@@ -71,10 +71,11 @@ from superset.extensions import (
 )
 from superset.models.helpers import AuditMixinNullable, ImportExportMixin
 from superset.result_set import SupersetResultSet
-from superset.superset_typing import ResultSetColumnType
+from superset.superset_typing import OAuth2ClientConfig, ResultSetColumnType
 from superset.utils import cache as cache_util, core as utils
 from superset.utils.backports import StrEnum
 from superset.utils.core import get_username
+from superset.utils.oauth2 import get_oauth2_access_token
 
 config = app.config
 custom_password_store = config["SQLALCHEMY_CUSTOM_PASSWORD_STORE"]
@@ -381,7 +382,7 @@ class Database(
         )
 
     @contextmanager
-    def get_sqla_engine_with_context(
+    def get_sqla_engine(
         self,
         schema: str | None = None,
         nullpool: bool = True,
@@ -422,6 +423,11 @@ class Database(
                 source=source,
                 sqlalchemy_uri=sqlalchemy_uri,
             )
+
+    # The `get_sqla_engine_with_context` was renamed to `get_sqla_engine`, but we kept a
+    # reference to the old method to prevent breaking third-party applications.
+    # TODO (betodealmeida): Remove in 5.0
+    get_sqla_engine_with_context = get_sqla_engine
 
     def _get_sqla_engine(
         self,
@@ -465,6 +471,17 @@ class Database(
         )
 
         effective_username = self.get_effective_user(sqlalchemy_url)
+        oauth2_config = self.get_oauth2_config()
+        access_token = (
+            get_oauth2_access_token(
+                oauth2_config,
+                self.id,
+                g.user.id,
+                self.db_engine_spec,
+            )
+            if hasattr(g, "user") and hasattr(g.user, "id") and oauth2_config
+            else None
+        )
         # If using MySQL or Presto for example, will set url.username
         # If using Hive, will not do anything yet since that relies on a
         # configuration parameter instead.
@@ -472,6 +489,7 @@ class Database(
             sqlalchemy_url,
             self.impersonate_user,
             effective_username,
+            access_token,
         )
 
         masked_url = self.get_password_masked_url(sqlalchemy_url)
@@ -482,6 +500,7 @@ class Database(
                 connect_args,
                 str(sqlalchemy_url),
                 effective_username,
+                access_token,
             )
 
         if connect_args:
@@ -517,7 +536,7 @@ class Database(
         nullpool: bool = True,
         source: utils.QuerySource | None = None,
     ) -> Connection:
-        with self.get_sqla_engine_with_context(
+        with self.get_sqla_engine(
             schema=schema, nullpool=nullpool, source=source
         ) as engine:
             with closing(engine.raw_connection()) as conn:
@@ -560,7 +579,7 @@ class Database(
         mutator: Callable[[pd.DataFrame], None] | None = None,
     ) -> pd.DataFrame:
         sqls = self.db_engine_spec.parse_sql(sql)
-        with self.get_sqla_engine_with_context(schema) as engine:
+        with self.get_sqla_engine(schema) as engine:
             engine_url = engine.url
         mutate_after_split = config["MUTATE_AFTER_SPLIT"]
         sql_query_mutator = config["SQL_QUERY_MUTATOR"]
@@ -592,7 +611,7 @@ class Database(
                         database=None,
                     )
                 _log_query(sql_)
-                self.db_engine_spec.execute(cursor, sql_)
+                self.db_engine_spec.execute(cursor, sql_, self)
                 cursor.fetchall()
 
             if mutate_after_split:
@@ -602,10 +621,10 @@ class Database(
                     database=None,
                 )
                 _log_query(last_sql)
-                self.db_engine_spec.execute(cursor, last_sql)
+                self.db_engine_spec.execute(cursor, last_sql, self)
             else:
                 _log_query(sqls[-1])
-                self.db_engine_spec.execute(cursor, sqls[-1])
+                self.db_engine_spec.execute(cursor, sqls[-1], self)
 
             data = self.db_engine_spec.fetch_data(cursor)
             result_set = SupersetResultSet(
@@ -622,7 +641,7 @@ class Database(
             return df
 
     def compile_sqla_query(self, qry: Select, schema: str | None = None) -> str:
-        with self.get_sqla_engine_with_context(schema) as engine:
+        with self.get_sqla_engine(schema) as engine:
             sql = str(qry.compile(engine, compile_kwargs={"literal_binds": True}))
 
             # pylint: disable=protected-access
@@ -642,7 +661,7 @@ class Database(
         cols: list[ResultSetColumnType] | None = None,
     ) -> str:
         """Generates a ``select *`` statement in the proper dialect"""
-        with self.get_sqla_engine_with_context(schema) as engine:
+        with self.get_sqla_engine(schema) as engine:
             return self.db_engine_spec.select_star(
                 self,
                 table_name,
@@ -739,9 +758,7 @@ class Database(
     def get_inspector_with_context(
         self, ssh_tunnel: SSHTunnel | None = None
     ) -> Inspector:
-        with self.get_sqla_engine_with_context(
-            override_ssh_tunnel=ssh_tunnel
-        ) as engine:
+        with self.get_sqla_engine(override_ssh_tunnel=ssh_tunnel) as engine:
             yield sqla.inspect(engine)
 
     @cache_util.memoized_func(
@@ -821,7 +838,7 @@ class Database(
     def get_table(self, table_name: str, schema: str | None = None) -> Table:
         extra = self.get_extra()
         meta = MetaData(**extra.get("metadata_params", {}))
-        with self.get_sqla_engine_with_context() as engine:
+        with self.get_sqla_engine() as engine:
             return Table(
                 table_name,
                 meta,
@@ -925,11 +942,11 @@ class Database(
         return self.perm  # type: ignore
 
     def has_table(self, table: Table) -> bool:
-        with self.get_sqla_engine_with_context() as engine:
+        with self.get_sqla_engine() as engine:
             return engine.has_table(table.table_name, table.schema or None)
 
     def has_table_by_name(self, table_name: str, schema: str | None = None) -> bool:
-        with self.get_sqla_engine_with_context() as engine:
+        with self.get_sqla_engine() as engine:
             return engine.has_table(table_name, schema)
 
     @classmethod
@@ -948,7 +965,7 @@ class Database(
         return view_name in view_names
 
     def has_view(self, view_name: str, schema: str | None = None) -> bool:
-        with self.get_sqla_engine_with_context(schema) as engine:
+        with self.get_sqla_engine(schema) as engine:
             return engine.run_callable(
                 self._has_view, engine.dialect, view_name, schema
             )
@@ -976,10 +993,59 @@ class Database(
         sqla_col.key = label_expected
         return sqla_col
 
+    def is_oauth2_enabled(self) -> bool:
+        """
+        Is OAuth2 enabled in the database for authentication?
+
+        Currently this looks for a global config at the DB engine spec level, but in the
+        future we want to be allow admins to create custom OAuth2 clients from the
+        Superset UI, and assign them to specific databases.
+        """
+        return self.db_engine_spec.is_oauth2_enabled()
+
+    def get_oauth2_config(self) -> OAuth2ClientConfig | None:
+        """
+        Return OAuth2 client configuration.
+
+        This includes client ID, client secret, scope, redirect URI, endpointsm etc.
+        Currently this reads the global DB engine spec config, but in the future it
+        should first check if there's a custom client assigned to the database.
+        """
+        return self.db_engine_spec.get_oauth2_config()
+
 
 sqla.event.listen(Database, "after_insert", security_manager.database_after_insert)
 sqla.event.listen(Database, "after_update", security_manager.database_after_update)
 sqla.event.listen(Database, "after_delete", security_manager.database_after_delete)
+
+
+class DatabaseUserOAuth2Tokens(Model, AuditMixinNullable):
+    """
+    Store OAuth2 tokens, for authenticating to DBs using user personal tokens.
+    """
+
+    __tablename__ = "database_user_oauth2_tokens"
+    __table_args__ = (sqla.Index("idx_user_id_database_id", "user_id", "database_id"),)
+
+    id = Column(Integer, primary_key=True)
+
+    user_id = Column(
+        Integer,
+        ForeignKey("ab_user.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    user = relationship(security_manager.user_model, foreign_keys=[user_id])
+
+    database_id = Column(
+        Integer,
+        ForeignKey("dbs.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    database = relationship("Database", foreign_keys=[database_id])
+
+    access_token = Column(encrypted_field_factory.create(Text), nullable=True)
+    access_token_expiration = Column(DateTime, nullable=True)
+    refresh_token = Column(encrypted_field_factory.create(Text), nullable=True)
 
 
 class Log(Model):  # pylint: disable=too-few-public-methods
