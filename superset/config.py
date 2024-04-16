@@ -20,6 +20,7 @@ All configuration in this file can be overridden by providing a superset_config
 in your PYTHONPATH as there is a ``from superset_config import *``
 at the end of this file.
 """
+# mypy: ignore-errors
 # pylint: disable=too-many-lines
 from __future__ import annotations
 
@@ -42,7 +43,8 @@ from flask import Blueprint
 from flask_appbuilder.security.manager import AUTH_DB
 from flask_caching.backends.base import BaseCache
 from pandas import Series
-from pandas._libs.parsers import STR_NA_VALUES  # pylint: disable=no-name-in-module
+from pandas._libs.parsers import STR_NA_VALUES
+from sqlalchemy.engine.url import URL
 from sqlalchemy.orm.query import Query
 
 from superset.advanced_data_type.plugins.internet_address import internet_address
@@ -433,6 +435,7 @@ DEFAULT_FEATURE_FLAGS: dict[str, bool] = {
     "EMBEDDED_SUPERSET": False,
     # Enables Alerts and reports new implementation
     "ALERT_REPORTS": False,
+    "ALERT_REPORT_TABS": False,
     "DASHBOARD_RBAC": False,
     "ENABLE_ADVANCED_DATA_TYPES": False,
     # Enabling ALERTS_ATTACH_REPORTS, the system sends email and slack message
@@ -940,7 +943,7 @@ class CeleryConfig:  # pylint: disable=too-few-public-methods
     }
 
 
-CELERY_CONFIG = CeleryConfig  # pylint: disable=invalid-name
+CELERY_CONFIG: type[CeleryConfig] = CeleryConfig
 
 # Set celery config to None to disable all the above configuration
 # CELERY_CONFIG = None
@@ -1206,6 +1209,17 @@ DASHBOARD_TEMPLATE_ID = None
 DB_CONNECTION_MUTATOR = None
 
 
+# A callable that is invoked for every invocation of DB Engine Specs
+# which allows for custom validation of the engine URI.
+# See: superset.db_engine_specs.base.BaseEngineSpec.validate_database_uri
+# Example:
+#   def DB_ENGINE_URI_VALIDATOR(sqlalchemy_uri: URL):
+#       if not <some condition>:
+#           raise Exception("URI invalid")
+#
+DB_SQLA_URI_VALIDATOR: Callable[[URL], None] | None = None
+
+
 # A function that intercepts the SQL to be executed and can alter it.
 # The use case is can be around adding some sort of comment header
 # with information such as the username and worker node information
@@ -1316,6 +1330,11 @@ EMAIL_REPORTS_CTA = "Explore in Superset"
 SLACK_API_TOKEN: Callable[[], str] | str | None = None
 SLACK_PROXY = None
 
+# Whether Superset should use Slack avatars for users.
+# If on, you'll want to add "https://avatars.slack-edge.com" to the list of allowed
+# domains in your TALISMAN_CONFIG
+SLACK_ENABLE_AVATARS = False
+
 # The webdriver to use for generating reports. Use one of the following
 # firefox
 #   Requires: geckodriver and firefox installations
@@ -1394,6 +1413,35 @@ PREFERRED_DATABASES: list[str] = [
 # one here.
 TEST_DATABASE_CONNECTION_TIMEOUT = timedelta(seconds=30)
 
+# Details needed for databases that allows user to authenticate using personal
+# OAuth2 tokens. See https://github.com/apache/superset/issues/20300 for more
+# information. The scope and URIs are optional.
+DATABASE_OAUTH2_CLIENTS: dict[str, dict[str, Any]] = {
+    # "Google Sheets": {
+    #     "id": "XXX.apps.googleusercontent.com",
+    #     "secret": "GOCSPX-YYY",
+    #     "scope": " ".join(
+    #         [
+    #             "https://www.googleapis.com/auth/drive.readonly",
+    #             "https://www.googleapis.com/auth/spreadsheets",
+    #             "https://spreadsheets.google.com/feeds",
+    #         ]
+    #     ),
+    #     "authorization_request_uri": "https://accounts.google.com/o/oauth2/v2/auth",
+    #     "token_request_uri": "https://oauth2.googleapis.com/token",
+    # },
+}
+# OAuth2 state is encoded in a JWT using the alogorithm below.
+DATABASE_OAUTH2_JWT_ALGORITHM = "HS256"
+# By default the redirect URI points to /api/v1/database/oauth2/ and doesn't have to be
+# specified. If you're running multiple Superset instances you might want to have a
+# proxy handling the redirects, since redirect URIs need to be registered in the OAuth2
+# applications. In that case, the proxy can forward the request to the correct instance
+# by looking at the `default_redirect_uri` attribute in the OAuth2 state object.
+# DATABASE_OAUTH2_REDIRECT_URI = "http://localhost:8088/api/v1/database/oauth2/"
+# Timeout when fetching access and refresh tokens.
+DATABASE_OAUTH2_TIMEOUT = timedelta(seconds=30)
+
 # Enable/disable CSP warning
 CONTENT_SECURITY_POLICY_WARNING = True
 
@@ -1411,6 +1459,7 @@ TALISMAN_CONFIG = {
             "data:",
             "https://apachesuperset.gateway.scarf.sh",
             "https://static.scarf.sh/",
+            # "https://avatars.slack-edge.com", # Uncomment when SLACK_ENABLE_AVATARS is True
         ],
         "worker-src": ["'self'", "blob:"],
         "connect-src": [
@@ -1440,6 +1489,7 @@ TALISMAN_DEV_CONFIG = {
             "data:",
             "https://apachesuperset.gateway.scarf.sh",
             "https://static.scarf.sh/",
+            "https://avatars.slack-edge.com",
         ],
         "worker-src": ["'self'", "blob:"],
         "connect-src": [
@@ -1474,7 +1524,6 @@ SESSION_SERVER_SIDE = False
 # from flask_session import RedisSessionInterface
 #
 # SESSION_SERVER_SIDE = True
-# SESSION_USE_SIGNER = True
 # SESSION_TYPE = "redis"
 # SESSION_REDIS = Redis(host="localhost", port=6379, db=0)
 #
@@ -1704,7 +1753,7 @@ elif importlib.util.find_spec("superset_config") and not is_test():
     try:
         # pylint: disable=import-error,wildcard-import,unused-wildcard-import
         import superset_config
-        from superset_config import *  # type: ignore
+        from superset_config import *  # noqa: F403, F401
 
         print(f"Loaded your LOCAL configuration at [{superset_config.__file__}]")
     except Exception:
