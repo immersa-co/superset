@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import InfoTooltip, { InfoTooltipProps } from 'src/components/InfoTooltip';
 
 export default {
@@ -66,14 +65,6 @@ InteractiveInfoTooltip.argTypes = {
     control: {
       type: 'select',
       options: ['hover', 'click'],
-    },
-  },
-};
-
-InteractiveInfoTooltip.story = {
-  parameters: {
-    knobs: {
-      disable: true,
     },
   },
 };

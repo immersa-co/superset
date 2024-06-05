@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import { Menu } from 'src/components/Menu';
 import { DropdownButton, DropdownButtonProps } from '.';
 
@@ -65,14 +64,6 @@ InteractiveDropdownButton.argTypes = {
   overlay: {
     defaultValue: menu,
     table: {
-      disable: true,
-    },
-  },
-};
-
-InteractiveDropdownButton.story = {
-  parameters: {
-    knobs: {
       disable: true,
     },
   },

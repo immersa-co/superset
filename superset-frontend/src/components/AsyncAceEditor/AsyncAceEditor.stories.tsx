@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import {
   SQLEditor,
   FullSQLEditor,
@@ -96,13 +95,8 @@ AsyncAceEditor.argTypes = {
   },
 };
 
-AsyncAceEditor.story = {
-  parameters: {
-    actions: {
-      disable: true,
-    },
-    knobs: {
-      disable: true,
-    },
+AsyncAceEditor.parameters = {
+  actions: {
+    disable: true,
   },
 };

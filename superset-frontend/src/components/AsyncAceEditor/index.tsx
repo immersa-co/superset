@@ -16,7 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { forwardRef, useEffect } from 'react';
+import { forwardRef, useEffect, ComponentType } from 'react';
+
 import {
   Editor as OrigEditor,
   IEditSession,
@@ -24,11 +25,15 @@ import {
   TextMode as OrigTextMode,
 } from 'brace';
 import AceEditor, { IAceEditorProps } from 'react-ace';
+import { config } from 'ace-builds';
 import { acequire } from 'ace-builds/src-noconflict/ace';
 import AsyncEsmComponent, {
   PlaceholderProps,
 } from 'src/components/AsyncEsmComponent';
 import useEffectEvent from 'src/hooks/useEffectEvent';
+import cssWorkerUrl from 'ace-builds/src-noconflict/worker-css';
+
+config.setModuleUrl('ace/mode/css_worker', cssWorkerUrl);
 
 export interface AceCompleterKeywordData {
   name: string;
@@ -88,7 +93,7 @@ export type AsyncAceEditorOptions = {
   defaultTheme?: AceEditorTheme;
   defaultTabSize?: number;
   fontFamily?: string;
-  placeholder?: React.ComponentType<
+  placeholder?: ComponentType<
     PlaceholderProps & Partial<IAceEditorProps>
   > | null;
 };

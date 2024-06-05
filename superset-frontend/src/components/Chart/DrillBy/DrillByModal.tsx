@@ -17,13 +17,7 @@
  * under the License.
  */
 
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   BaseFormData,
   Column,
@@ -55,11 +49,12 @@ import {
   LOG_ACTIONS_FURTHER_DRILL_BY,
 } from 'src/logger/LogUtils';
 import { findPermission } from 'src/utils/findPermission';
+import { getQuerySettings } from 'src/explore/exploreUtils';
 import { Dataset, DrillByType } from '../types';
 import DrillByChart from './DrillByChart';
 import { ContextMenuItem } from '../ChartContextMenu/ChartContextMenu';
 import { useContextMenu } from '../ChartContextMenu/useContextMenu';
-import { getChartDataRequest } from '../chartAction';
+import { getChartDataRequest, handleChartDataResponse } from '../chartAction';
 import { useDisplayModeToggle } from './useDisplayModeToggle';
 import {
   DrillByBreadcrumb,
@@ -192,8 +187,8 @@ export default function DrillByModal({
   const initialGroupbyColumns = useMemo(
     () =>
       ensureIsArray(formData[groupbyFieldName])
-        .map(colName =>
-          dataset.columns?.find(col => col.column_name === colName),
+        .map(
+          colName => dataset.columns?.find(col => col.column_name === colName),
         )
         .filter(isDefined),
     [dataset.columns, formData, groupbyFieldName],
@@ -405,13 +400,17 @@ export default function DrillByModal({
 
   useEffect(() => {
     if (drilledFormData) {
+      const [useLegacyApi] = getQuerySettings(drilledFormData);
       setIsChartDataLoading(true);
       setChartDataResult(undefined);
       getChartDataRequest({
         formData: drilledFormData,
       })
-        .then(({ json }) => {
-          setChartDataResult(json.result);
+        .then(({ response, json }) =>
+          handleChartDataResponse(response, json, useLegacyApi),
+        )
+        .then(queriesResponse => {
+          setChartDataResult(queriesResponse);
         })
         .catch(() => {
           addDangerToast(t('Failed to load chart data.'));

@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import { DatePickerProps, RangePickerProps } from 'antd/lib/date-picker';
 import { DatePicker, RangePicker } from '.';
 
@@ -65,14 +64,6 @@ InteractiveDatePicker.args = {
 
 InteractiveDatePicker.argTypes = interactiveTypes;
 
-InteractiveDatePicker.story = {
-  parameters: {
-    knobs: {
-      disable: true,
-    },
-  },
-};
-
 export const InteractiveRangePicker = (args: RangePickerProps) => (
   <RangePicker {...args} />
 );
@@ -85,11 +76,3 @@ InteractiveRangePicker.args = {
 };
 
 InteractiveRangePicker.argTypes = interactiveTypes;
-
-InteractiveRangePicker.story = {
-  parameters: {
-    knobs: {
-      disable: true,
-    },
-  },
-};

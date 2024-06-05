@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import Button, { ButtonProps } from 'src/components/Button';
 import { STYLES, SIZES } from 'src/components/Button/Button.stories';
 import ButtonGroup from './index';
@@ -58,13 +57,8 @@ InteractiveButtonGroup.argTypes = {
   },
 };
 
-InteractiveButtonGroup.story = {
-  parameters: {
-    actions: {
-      disable: true,
-    },
-    knobs: {
-      disable: true,
-    },
+InteractiveButtonGroup.parameters = {
+  actions: {
+    disable: true,
   },
 };

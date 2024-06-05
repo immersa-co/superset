@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React from 'react';
+import { FC, memo } from 'react';
 import {
   DataMaskStateWithId,
   FeatureFlag,
@@ -40,8 +40,8 @@ import crossFiltersSelector from './CrossFilters/selectors';
 const HorizontalBar = styled.div`
   ${({ theme }) => `
     padding: ${theme.gridUnit * 3}px ${theme.gridUnit * 2}px ${
-    theme.gridUnit * 3
-  }px ${theme.gridUnit * 4}px;
+      theme.gridUnit * 3
+    }px ${theme.gridUnit * 4}px;
     background: ${theme.colors.grayscale.light5};
     box-shadow: inset 0px -2px 2px -1px ${theme.colors.grayscale.light2};
   `}
@@ -96,7 +96,7 @@ const FiltersLinkContainer = styled.div<{ hasFilters: boolean }>`
   `}
 `;
 
-const HorizontalFilterBar: React.FC<HorizontalBarProps> = ({
+const HorizontalFilterBar: FC<HorizontalBarProps> = ({
   actions,
   canEdit,
   dashboardId,
@@ -165,4 +165,4 @@ const HorizontalFilterBar: React.FC<HorizontalBarProps> = ({
     </HorizontalBar>
   );
 };
-export default React.memo(HorizontalFilterBar);
+export default memo(HorizontalFilterBar);

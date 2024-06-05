@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
+import { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { isFeatureEnabled, t, FeatureFlag } from '@superset-ui/core';
 
@@ -59,18 +59,16 @@ const propTypes = {
   ownDataCharts: PropTypes.object.isRequired,
   layout: PropTypes.object.isRequired,
   impressionId: PropTypes.string.isRequired,
-  initMessages: PropTypes.array,
   timeout: PropTypes.number,
   userId: PropTypes.string,
 };
 
 const defaultProps = {
-  initMessages: [],
   timeout: 60,
   userId: '',
 };
 
-class Dashboard extends React.PureComponent {
+class Dashboard extends PureComponent {
   static contextType = PluginContext;
 
   static onBeforeUnload(hasChanged) {

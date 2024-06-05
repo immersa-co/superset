@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import Badge, { BadgeProps } from '.';
 
 export default {
@@ -103,14 +102,6 @@ InteractiveBadge.argTypes = {
   },
 };
 
-InteractiveBadge.story = {
-  parameters: {
-    knobs: {
-      disable: true,
-    },
-  },
-};
-
 export const BadgeGallery = () => (
   <>
     {SIZES.options.map(size => (
@@ -143,30 +134,20 @@ export const BadgeTextGallery = () => (
   </>
 );
 
-BadgeGallery.story = {
-  parameters: {
-    actions: {
-      disable: true,
-    },
-    controls: {
-      disable: true,
-    },
-    knobs: {
-      disable: true,
-    },
+BadgeGallery.parameters = {
+  actions: {
+    disable: true,
+  },
+  controls: {
+    disable: true,
   },
 };
 
-BadgeTextGallery.story = {
-  parameters: {
-    actions: {
-      disable: true,
-    },
-    controls: {
-      disable: true,
-    },
-    knobs: {
-      disable: true,
-    },
+BadgeTextGallery.parameters = {
+  actions: {
+    disable: true,
+  },
+  controls: {
+    disable: true,
   },
 };

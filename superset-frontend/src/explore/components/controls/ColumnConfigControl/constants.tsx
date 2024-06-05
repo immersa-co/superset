@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import { GenericDataType, t, validateNumber } from '@superset-ui/core';
 import {
   ControlFormItemSpec,
@@ -42,6 +41,7 @@ export type SharedColumnConfigProp =
   | 'currencyFormat';
 
 const d3NumberFormat: ControlFormItemSpec<'Select'> = {
+  allowNewOptions: true,
   controlType: 'Select',
   label: t('D3 format'),
   description: D3_FORMAT_DOCS,

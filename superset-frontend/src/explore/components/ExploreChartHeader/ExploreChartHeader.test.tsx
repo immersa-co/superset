@@ -17,7 +17,6 @@
  * under the License.
  */
 
-import React from 'react';
 import sinon from 'sinon';
 import { render, screen, waitFor } from 'spec/helpers/testing-library';
 import userEvent from '@testing-library/user-event';
@@ -360,9 +359,8 @@ describe('Additional actions tests', () => {
       expect(spy).toBeCalledTimes(0);
 
       userEvent.hover(screen.getByText('Download'));
-      const downloadAsImageElement = await screen.findByText(
-        'Download as image',
-      );
+      const downloadAsImageElement =
+        await screen.findByText('Download as image');
       userEvent.click(downloadAsImageElement);
 
       expect(spy).toBeCalledTimes(1);
