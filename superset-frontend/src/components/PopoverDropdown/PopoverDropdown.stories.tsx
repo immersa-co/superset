@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PopoverDropdown, { PopoverDropdownProps, OptionProps } from '.';
 
 export default {
@@ -81,13 +81,5 @@ InteractivePopoverDropdown.argTypes = {
   options: {
     defaultValue: OPTIONS,
     table: { disable: true },
-  },
-};
-
-InteractivePopoverDropdown.story = {
-  parameters: {
-    knobs: {
-      disable: true,
-    },
   },
 };

@@ -18,7 +18,7 @@
  */
 import { snakeCase, isEqual, cloneDeep } from 'lodash';
 import PropTypes from 'prop-types';
-import React from 'react';
+import { createRef, Component } from 'react';
 import {
   SuperChart,
   logging,
@@ -81,7 +81,7 @@ const defaultProps = {
   triggerRender: false,
 };
 
-class ChartRenderer extends React.Component {
+class ChartRenderer extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -94,7 +94,7 @@ class ChartRenderer extends React.Component {
     };
     this.hasQueryResponseChange = false;
 
-    this.contextMenuRef = React.createRef();
+    this.contextMenuRef = createRef();
 
     this.handleAddFilter = this.handleAddFilter.bind(this);
     this.handleRenderSuccess = this.handleRenderSuccess.bind(this);
@@ -287,7 +287,7 @@ class ChartRenderer extends React.Component {
             typeof __webpack_require__ !== 'undefined' &&
             // eslint-disable-next-line camelcase, no-undef
             typeof __webpack_require__.h === 'function' &&
-            // eslint-disable-next-line no-undef
+            // eslint-disable-next-line no-undef, camelcase
             __webpack_require__.h()
           }`
         : '';

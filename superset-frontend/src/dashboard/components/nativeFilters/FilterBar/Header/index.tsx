@@ -18,7 +18,7 @@
  */
 /* eslint-disable no-param-reassign */
 import { css, styled, t, useTheme } from '@superset-ui/core';
-import React, { FC, useMemo } from 'react';
+import { memo, FC, useMemo } from 'react';
 import Icons from 'src/components/Icons';
 import Button from 'src/components/Button';
 import { useSelector } from 'react-redux';
@@ -60,8 +60,8 @@ const HeaderButton = styled(Button)`
 const Wrapper = styled.div`
   ${({ theme }) => `
     padding: ${theme.gridUnit * 3}px ${theme.gridUnit * 2}px ${
-    theme.gridUnit
-  }px;
+      theme.gridUnit
+    }px;
 
     .ant-dropdown-trigger span {
       padding-right: ${theme.gridUnit * 2}px;
@@ -131,4 +131,4 @@ const Header: FC<HeaderProps> = ({ toggleFiltersBar }) => {
   );
 };
 
-export default React.memo(Header);
+export default memo(Header);

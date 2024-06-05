@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import Button from 'src/components/Button';
 import { TooltipProps, TooltipPlacement } from 'antd/lib/tooltip';
 import { Tooltip } from './index';
@@ -48,14 +47,6 @@ export const InteractiveTooltip = (args: TooltipProps) => (
     <Button style={{ margin: '50px 100px' }}>Hover me</Button>
   </Tooltip>
 );
-
-InteractiveTooltip.story = {
-  parameters: {
-    knobs: {
-      disable: true,
-    },
-  },
-};
 
 InteractiveTooltip.args = {
   title: 'Simple tooltip text',

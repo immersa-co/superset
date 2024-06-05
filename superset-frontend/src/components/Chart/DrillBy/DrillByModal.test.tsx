@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import fetchMock from 'fetch-mock';
 import { omit, isUndefined, omitBy } from 'lodash';
 import userEvent from '@testing-library/user-event';
@@ -246,7 +246,7 @@ test('should render "Edit chart" as disabled without can_explore permission', as
     {
       user: {
         ...drillByModalState.user,
-        roles: { Admin: [['test_invalid_role', 'Superset']] },
+        roles: { Admin: [['invalid_permission', 'Superset']] },
       },
     },
   );

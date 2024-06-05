@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import Slider, { SliderSingleProps } from '.';
 
 export default {
@@ -45,13 +44,5 @@ InteractiveSlider.argTypes = {
   },
   vertical: {
     control: { type: 'boolean' },
-  },
-};
-
-InteractiveSlider.story = {
-  parameters: {
-    knobs: {
-      disable: true,
-    },
   },
 };

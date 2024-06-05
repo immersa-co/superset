@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { ReactNode, useState, useEffect, useMemo } from 'react';
+import { ReactNode, useState, useEffect, useMemo } from 'react';
 import {
   css,
   styled,
@@ -25,6 +25,7 @@ import {
   NO_TIME_RANGE,
   SupersetTheme,
   useCSSTextTruncation,
+  fetchTimeRange,
 } from '@superset-ui/core';
 import Button from 'src/components/Button';
 import ControlHeader from 'src/explore/components/ControlHeader';
@@ -41,7 +42,6 @@ import ControlPopover from '../ControlPopover/ControlPopover';
 import { DateFilterControlProps, FrameType } from './types';
 import {
   DateFilterTestKey,
-  fetchTimeRange,
   FRAME_OPTIONS,
   guessFrame,
   useDefaultTimeFilter,

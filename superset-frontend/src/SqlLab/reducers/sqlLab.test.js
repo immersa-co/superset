@@ -75,6 +75,25 @@ describe('sqlLabReducer', () => {
         initialState.queryEditors.length,
       );
     });
+    it('should select the latest query editor when tabHistory is empty', () => {
+      const currentQE = newState.queryEditors[0];
+      newState = {
+        ...initialState,
+        tabHistory: [initialState.queryEditors[0]],
+      };
+      const action = {
+        type: actions.REMOVE_QUERY_EDITOR,
+        queryEditor: currentQE,
+      };
+      newState = sqlLabReducer(newState, action);
+      expect(newState.queryEditors).toHaveLength(
+        initialState.queryEditors.length - 1,
+      );
+      expect(newState.queryEditors.map(qe => qe.id)).not.toContainEqual(
+        currentQE.id,
+      );
+      expect(newState.tabHistory).toEqual([initialState.queryEditors[2].id]);
+    });
     it('should remove a query editor including unsaved changes', () => {
       expect(newState.queryEditors).toHaveLength(
         initialState.queryEditors.length + 1,
@@ -219,6 +238,34 @@ describe('sqlLabReducer', () => {
       expect(newState.queryEditors[0].northPercent).toBe(
         interceptedAction.northPercent,
       );
+    });
+    it('should migrate query editor by new query editor id', () => {
+      const index = newState.queryEditors.findIndex(({ id }) => id === qe.id);
+      const newQueryEditor = {
+        ...qe,
+        id: 'updatedNewId',
+        schema: 'updatedSchema',
+      };
+      const action = {
+        type: actions.MIGRATE_QUERY_EDITOR,
+        oldQueryEditor: qe,
+        newQueryEditor,
+      };
+      newState = sqlLabReducer(newState, action);
+      expect(newState.queryEditors[index].id).toEqual('updatedNewId');
+      expect(newState.queryEditors[index]).toEqual(newQueryEditor);
+    });
+    it('should migrate tab history by new query editor id', () => {
+      expect(newState.tabHistory).toContain(qe.id);
+      const action = {
+        type: actions.MIGRATE_TAB_HISTORY,
+        oldId: qe.id,
+        newId: 'updatedNewId',
+      };
+      newState = sqlLabReducer(newState, action);
+
+      expect(newState.tabHistory).toContain('updatedNewId');
+      expect(newState.tabHistory).not.toContain(qe.id);
     });
   });
   describe('Tables', () => {

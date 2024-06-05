@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { FC, useCallback, useRef, useState } from 'react';
+import { FC, useCallback, useRef, useState } from 'react';
 import {
   NativeFilterScope,
   styled,
@@ -73,9 +73,8 @@ const FilterScope: FC<FilterScopeProps> = ({
       ? ScopingType.All
       : ScopingType.Specific,
   );
-  const [hasScopeBeenModified, setHasScopeBeenModified] = useState(
-    !!filterScope,
-  );
+  const [hasScopeBeenModified, setHasScopeBeenModified] =
+    useState(!!filterScope);
 
   const onUpdateFormValues = useCallback(
     (formValues: any) => {

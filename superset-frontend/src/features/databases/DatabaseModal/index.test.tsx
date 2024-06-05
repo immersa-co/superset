@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
+
+// TODO: These tests should be made atomic in separate files
+
 import fetchMock from 'fetch-mock';
 import userEvent from '@testing-library/user-event';
 import {
@@ -1227,9 +1229,9 @@ describe('DatabaseModal', () => {
           const SSHTunnelServerPortInput = screen.getByTestId(
             'ssh-tunnel-server_port-input',
           );
-          expect(SSHTunnelServerPortInput).toHaveValue('');
+          expect(SSHTunnelServerPortInput).toHaveValue(null);
           userEvent.type(SSHTunnelServerPortInput, '22');
-          expect(SSHTunnelServerPortInput).toHaveValue('22');
+          expect(SSHTunnelServerPortInput).toHaveValue(22);
           const SSHTunnelUsernameInput = screen.getByTestId(
             'ssh-tunnel-username-input',
           );
@@ -1263,9 +1265,9 @@ describe('DatabaseModal', () => {
           const SSHTunnelServerPortInput = screen.getByTestId(
             'ssh-tunnel-server_port-input',
           );
-          expect(SSHTunnelServerPortInput).toHaveValue('');
+          expect(SSHTunnelServerPortInput).toHaveValue(null);
           userEvent.type(SSHTunnelServerPortInput, '22');
-          expect(SSHTunnelServerPortInput).toHaveValue('22');
+          expect(SSHTunnelServerPortInput).toHaveValue(22);
           const SSHTunnelUsernameInput = screen.getByTestId(
             'ssh-tunnel-username-input',
           );

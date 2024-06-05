@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import Tabs, { TabsProps } from '.';
 
 const { TabPane } = Tabs;
@@ -55,14 +54,6 @@ InteractiveTabs.argTypes = {
     control: {
       type: 'inline-radio',
       options: ['line', 'card', 'editable-card'],
-    },
-  },
-};
-
-InteractiveTabs.story = {
-  parameters: {
-    knobs: {
-      disable: true,
     },
   },
 };

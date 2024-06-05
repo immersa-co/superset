@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import { CommonWrapper } from 'enzyme';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -164,6 +163,48 @@ describe('plugin-chart-table', () => {
       expect(cells[0]).toHaveTextContent('$ 1.23k');
       expect(cells[1]).toHaveTextContent('$ 10k');
       expect(cells[2]).toHaveTextContent('$ 0');
+    });
+
+    it('render small formatted data with currencies', () => {
+      const props = transformProps({
+        ...testData.raw,
+        rawFormData: {
+          ...testData.raw.rawFormData,
+          column_config: {
+            num: {
+              d3SmallNumberFormat: '.2r',
+              currencyFormat: { symbol: 'USD', symbolPosition: 'prefix' },
+            },
+          },
+        },
+        queriesData: [
+          {
+            ...testData.raw.queriesData[0],
+            data: [
+              {
+                num: 1234,
+              },
+              {
+                num: 0.5,
+              },
+              {
+                num: 0.61234,
+              },
+            ],
+          },
+        ],
+      });
+      render(
+        ProviderWrapper({
+          children: <TableChart {...props} sticky={false} />,
+        }),
+      );
+      const cells = document.querySelectorAll('td');
+
+      expect(document.querySelectorAll('th')[0]).toHaveTextContent('num');
+      expect(cells[0]).toHaveTextContent('$ 1.23k');
+      expect(cells[1]).toHaveTextContent('$ 0.50');
+      expect(cells[2]).toHaveTextContent('$ 0.61');
     });
 
     it('render empty data', () => {

@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import moment from 'moment';
 import Timer, { TimerProps } from './index';
 
@@ -59,13 +58,8 @@ InteractiveTimer.argTypes = {
   },
 };
 
-InteractiveTimer.story = {
-  parameters: {
-    actions: {
-      disabled: true,
-    },
-    knobs: {
-      disabled: true,
-    },
+InteractiveTimer.parameters = {
+  actions: {
+    disabled: true,
   },
 };

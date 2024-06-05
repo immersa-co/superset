@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import CertifiedBadge, { CertifiedBadgeProps } from '.';
 
 export default {
@@ -31,12 +30,4 @@ InteractiveIcon.args = {
   certifiedBy: 'Trusted Authority',
   details: 'All requirements have been met.',
   size: 30,
-};
-
-InteractiveIcon.story = {
-  parameters: {
-    knobs: {
-      disable: true,
-    },
-  },
 };
